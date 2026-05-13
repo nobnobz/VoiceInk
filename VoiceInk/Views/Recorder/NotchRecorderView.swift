@@ -6,6 +6,7 @@ struct NotchRecorderView<S: RecorderStateProvider & ObservableObject>: View {
     @EnvironmentObject var windowManager: NotchWindowManager
     @EnvironmentObject private var enhancementService: AIEnhancementService
     @AppStorage("showLiveTextPreview") private var showLiveTextPreview = false
+    @AppStorage("UseLiquidGlassDesign") private var useLiquidGlassDesign = true
     @ObservedObject private var powerModeManager = PowerModeManager.shared
     @State private var activePopover: ActivePopoverState = .none
 
@@ -118,15 +119,19 @@ struct NotchRecorderView<S: RecorderStateProvider & ObservableObject>: View {
 
     @ViewBuilder
     private var pillBackground: some View {
-        ZStack {
-            VisualEffectView(material: .hudWindow, blendingMode: .behindWindow)
+        if useLiquidGlassDesign {
+            ZStack {
+                VisualEffectView(material: .hudWindow, blendingMode: .behindWindow)
 
-            if #available(macOS 26.0, *) {
-                GlassEffectContainer {
-                    Color.clear
-                        .glassEffect(.clear, in: pillShape)
+                if #available(macOS 26.0, *) {
+                    GlassEffectContainer {
+                        Color.clear
+                            .glassEffect(.clear, in: pillShape)
+                    }
                 }
             }
+        } else {
+            Color.black
         }
     }
 

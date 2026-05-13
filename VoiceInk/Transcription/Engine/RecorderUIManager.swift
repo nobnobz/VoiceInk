@@ -79,6 +79,21 @@ class RecorderUIManager: ObservableObject {
         }
     }
 
+    func refreshRecorderPanel() {
+        let shouldRestoreVisibility = isMiniRecorderVisible
+        notchWindowManager?.destroyWindow()
+        miniWindowManager?.destroyWindow()
+        notchWindowManager = nil
+        miniWindowManager = nil
+
+        if shouldRestoreVisibility {
+            Task { @MainActor in
+                try? await Task.sleep(nanoseconds: 50_000_000)
+                showRecorderPanel()
+            }
+        }
+    }
+
     // MARK: - Mini Recorder Management
 
     func toggleMiniRecorder(powerModeId: UUID? = nil) async {

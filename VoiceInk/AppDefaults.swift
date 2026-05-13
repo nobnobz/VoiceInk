@@ -39,6 +39,7 @@ enum AppDefaults {
             // UI & Behavior
             "IsMenuBarOnly": false,
             "powerModePersistConfig": false,
+            "UseLiquidGlassDesign": true,
             // Hotkey
             "isMiddleClickToggleEnabled": false,
             "middleClickActivationDelay": 200,

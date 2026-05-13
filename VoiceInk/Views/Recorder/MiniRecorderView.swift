@@ -4,6 +4,7 @@ import AppKit
 struct MiniRecorderView<S: RecorderStateProvider & ObservableObject>: View {
     @ObservedObject var stateProvider: S
     @ObservedObject var recorder: Recorder
+    let usesLiquidGlassDesign: Bool
     let usesExternalGlass: Bool
     @EnvironmentObject var windowManager: MiniWindowManager
     @EnvironmentObject private var enhancementService: AIEnhancementService
@@ -11,9 +12,15 @@ struct MiniRecorderView<S: RecorderStateProvider & ObservableObject>: View {
 
     @State private var activePopover: ActivePopoverState = .none
 
-    init(stateProvider: S, recorder: Recorder, usesExternalGlass: Bool = false) {
+    init(
+        stateProvider: S,
+        recorder: Recorder,
+        usesLiquidGlassDesign: Bool = true,
+        usesExternalGlass: Bool = false
+    ) {
         self.stateProvider = stateProvider
         self.recorder = recorder
+        self.usesLiquidGlassDesign = usesLiquidGlassDesign
         self.usesExternalGlass = usesExternalGlass
     }
 
@@ -108,7 +115,7 @@ struct MiniRecorderView<S: RecorderStateProvider & ObservableObject>: View {
     private var pill: some View {
         if usesExternalGlass {
             pillContent
-        } else {
+        } else if usesLiquidGlassDesign {
             pillContent
                 .background {
                     VisualEffectView(
@@ -120,6 +127,10 @@ struct MiniRecorderView<S: RecorderStateProvider & ObservableObject>: View {
                         borderColor: NSColor.white.withAlphaComponent(0.18)
                     )
                 }
+                .clipShape(pillShape)
+        } else {
+            pillContent
+                .background(Color.black)
                 .clipShape(pillShape)
         }
     }

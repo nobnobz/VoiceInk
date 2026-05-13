@@ -17,17 +17,19 @@ class MiniWindowManager: ObservableObject {
             preconditionFailure("VoiceInkEngine.enhancementService must be non-nil when creating MiniWindowManager")
         }
         self.makeView = { manager in
-            let usesExternalGlass: Bool
-            if #available(macOS 26.0, *) {
-                usesExternalGlass = true
-            } else {
-                usesExternalGlass = false
-            }
+            let usesLiquidGlassDesign = UserDefaults.standard.bool(forKey: "UseLiquidGlassDesign")
+            let usesExternalGlass = {
+                if #available(macOS 26.0, *) {
+                    return usesLiquidGlassDesign
+                }
+                return false
+            }()
 
             return AnyView(
                 MiniRecorderView(
                     stateProvider: engine,
                     recorder: recorder,
+                    usesLiquidGlassDesign: usesLiquidGlassDesign,
                     usesExternalGlass: usesExternalGlass
                 )
                     .environmentObject(manager)
@@ -79,7 +81,7 @@ class MiniWindowManager: ObservableObject {
         let view = makeView(self)
         let hostingController = NSHostingController(rootView: view)
 
-        if #available(macOS 26.0, *) {
+        if #available(macOS 26.0, *), UserDefaults.standard.bool(forKey: "UseLiquidGlassDesign") {
             newPanel.contentView = makeGlassHost(
                 contentView: hostingController.view,
                 cornerRadius: contentSize.height / 2

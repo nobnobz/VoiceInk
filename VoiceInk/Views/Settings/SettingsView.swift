@@ -21,6 +21,7 @@ struct SettingsView: View {
     @AppStorage("restoreClipboardAfterPaste") private var restoreClipboardAfterPaste = true
     @AppStorage("clipboardRestoreDelay") private var clipboardRestoreDelay = 2.0
     @AppStorage("useAppleScriptPaste") private var useAppleScriptPaste = false
+    @AppStorage("UseLiquidGlassDesign") private var useLiquidGlassDesign = true
     @State private var showResetOnboardingAlert = false
     @State private var currentShortcut = KeyboardShortcuts.getShortcut(for: .toggleMiniRecorder)
     @State private var isCustomCancelEnabled = KeyboardShortcuts.getShortcut(for: .cancelRecorder) != nil
@@ -201,6 +202,14 @@ struct SettingsView: View {
                 }
                 .pickerStyle(.segmented)
 
+                Picker("Recorder Appearance", selection: $useLiquidGlassDesign) {
+                    Text("Liquid Glass").tag(true)
+                    Text("Classic").tag(false)
+                }
+                .pickerStyle(.segmented)
+                .onChange(of: useLiquidGlassDesign) { _, _ in
+                    recorderUIManager.refreshRecorderPanel()
+                }
             }
 
             // MARK: - Experimental
