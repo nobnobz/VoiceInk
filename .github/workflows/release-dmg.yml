@@ -35,6 +35,15 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
+      - name: Select Xcode 26
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          sudo xcode-select -s /Applications/Xcode_26.3.app/Contents/Developer
+          xcodebuild -version
+          swift --version
+
       - name: Resolve release tag
         id: release
         shell: bash
@@ -66,6 +75,7 @@ jobs:
           key: whisper-xcframework-${{ runner.os }}-${{ hashFiles('Makefile') }}
           restore-keys: |
             whisper-xcframework-${{ runner.os }}-
+          save-always: true
 
       - name: Build whisper.cpp XCFramework
         run: make setup
