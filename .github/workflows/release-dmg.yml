@@ -1,0 +1,162 @@
+name: Release DMG
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: "Release tag to create or update, for example v1.76. Leave empty to use MARKETING_VERSION."
+        required: false
+        type: string
+      prerelease:
+        description: "Mark the GitHub release as a prerelease."
+        required: false
+        default: false
+        type: boolean
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    name: Build and release DMG
+    runs-on: macos-latest
+
+    env:
+      APP_NAME: VoiceInk
+      PROJECT: VoiceInk.xcodeproj
+      SCHEME: VoiceInk
+      CONFIGURATION: Release
+      DERIVED_DATA: ${{ github.workspace }}/.derived-data
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Resolve release tag
+        id: release
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
+            tag_name="${GITHUB_REF_NAME}"
+          else
+            tag_name="${{ inputs.tag_name }}"
+          fi
+
+          if [[ -z "${tag_name}" ]]; then
+            version="$(awk -F' = ' '/MARKETING_VERSION = / { gsub(/;/, "", $2); print $2; exit }' "${PROJECT}/project.pbxproj")"
+            tag_name="v${version}"
+          fi
+
+          release_name="${APP_NAME} ${tag_name}"
+          dmg_name="${APP_NAME}-${tag_name#v}.dmg"
+
+          echo "tag_name=${tag_name}" >> "${GITHUB_OUTPUT}"
+          echo "release_name=${release_name}" >> "${GITHUB_OUTPUT}"
+          echo "dmg_name=${dmg_name}" >> "${GITHUB_OUTPUT}"
+
+      - name: Cache whisper.cpp XCFramework
+        uses: actions/cache@v4
+        with:
+          path: ~/VoiceInk-Dependencies/whisper.cpp
+          key: whisper-xcframework-${{ runner.os }}-${{ hashFiles('Makefile') }}
+          restore-keys: |
+            whisper-xcframework-${{ runner.os }}-
+
+      - name: Build whisper.cpp XCFramework
+        run: make setup
+
+      - name: Build VoiceInk.app
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          rm -rf "${DERIVED_DATA}"
+          xcodebuild \
+            -project "${PROJECT}" \
+            -scheme "${SCHEME}" \
+            -configuration "${CONFIGURATION}" \
+            -destination "generic/platform=macOS" \
+            -derivedDataPath "${DERIVED_DATA}" \
+            -xcconfig LocalBuild.xcconfig \
+            CODE_SIGN_IDENTITY="-" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=YES \
+            DEVELOPMENT_TEAM="" \
+            CODE_SIGN_ENTITLEMENTS="${GITHUB_WORKSPACE}/VoiceInk/VoiceInk.local.entitlements" \
+            ONLY_ACTIVE_ARCH=NO \
+            SWIFT_ACTIVE_COMPILATION_CONDITIONS='$(inherited) LOCAL_BUILD' \
+            build
+
+      - name: Package DMG
+        id: package
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          app_path="${DERIVED_DATA}/Build/Products/${CONFIGURATION}/${APP_NAME}.app"
+          if [[ ! -d "${app_path}" ]]; then
+            echo "Built app not found at ${app_path}" >&2
+            exit 1
+          fi
+
+          staging_dir="${RUNNER_TEMP}/dmg-root"
+          dmg_path="${RUNNER_TEMP}/${{ steps.release.outputs.dmg_name }}"
+
+          rm -rf "${staging_dir}" "${dmg_path}"
+          mkdir -p "${staging_dir}"
+          ditto "${app_path}" "${staging_dir}/${APP_NAME}.app"
+          ln -s /Applications "${staging_dir}/Applications"
+
+          hdiutil create \
+            -volname "${APP_NAME}" \
+            -srcfolder "${staging_dir}" \
+            -ov \
+            -format UDZO \
+            "${dmg_path}"
+
+          shasum -a 256 "${dmg_path}" | tee "${dmg_path}.sha256"
+
+          echo "dmg_path=${dmg_path}" >> "${GITHUB_OUTPUT}"
+          echo "sha256_path=${dmg_path}.sha256" >> "${GITHUB_OUTPUT}"
+
+      - name: Upload workflow artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.release.outputs.dmg_name }}
+          path: |
+            ${{ steps.package.outputs.dmg_path }}
+            ${{ steps.package.outputs.sha256_path }}
+
+      - name: Create or update GitHub release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG_NAME: ${{ steps.release.outputs.tag_name }}
+          RELEASE_NAME: ${{ steps.release.outputs.release_name }}
+          DMG_PATH: ${{ steps.package.outputs.dmg_path }}
+          SHA256_PATH: ${{ steps.package.outputs.sha256_path }}
+          PRERELEASE: ${{ inputs.prerelease || false }}
+        run: |
+          set -euo pipefail
+
+          prerelease_flag=()
+          if [[ "${PRERELEASE}" == "true" ]]; then
+            prerelease_flag=(--prerelease)
+          fi
+
+          if gh release view "${TAG_NAME}" >/dev/null 2>&1; then
+            gh release upload "${TAG_NAME}" "${DMG_PATH}" "${SHA256_PATH}" --clobber
+          else
+            gh release create "${TAG_NAME}" \
+              "${DMG_PATH}" \
+              "${SHA256_PATH}" \
+              --target "${GITHUB_SHA}" \
+              --title "${RELEASE_NAME}" \
+              --generate-notes \
+              "${prerelease_flag[@]}"
+          fi
