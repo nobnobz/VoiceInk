@@ -103,6 +103,7 @@ jobs:
             CODE_SIGNING_ALLOWED=YES \
             DEVELOPMENT_TEAM="" \
             CODE_SIGN_ENTITLEMENTS="${GITHUB_WORKSPACE}/VoiceInk/VoiceInk.local.entitlements" \
+            ENABLE_HARDENED_RUNTIME=NO \
             ONLY_ACTIVE_ARCH=NO \
             SWIFT_ACTIVE_COMPILATION_CONDITIONS='$(inherited) LOCAL_BUILD' \
             build 2>&1 | tee "${xcodebuild_log}"
@@ -121,12 +122,39 @@ jobs:
 
           exit "${xcodebuild_status}"
 
+      - name: Normalize ad-hoc code signatures
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          app_path="${DERIVED_DATA}/Build/Products/${CONFIGURATION}/${APP_NAME}.app"
+          entitlements="${GITHUB_WORKSPACE}/VoiceInk/VoiceInk.local.entitlements"
+
+          if [[ ! -d "${app_path}" ]]; then
+            echo "Built app not found at ${app_path}" >&2
+            exit 1
+          fi
+
+          while IFS= read -r -d '' item; do
+            codesign --force --sign - --timestamp=none "${item}"
+          done < <(find "${app_path}/Contents/Frameworks" \
+            \( -type d -name "*.framework" -o -type d -name "*.bundle" -o -type f -name "*.dylib" \) \
+            -print0)
+
+          codesign --force --sign - --timestamp=none --entitlements "${entitlements}" "${app_path}"
+          codesign --verify --deep --strict --verbose=4 "${app_path}"
+          codesign --display --verbose=4 "${app_path}" 2>&1 | tee "${RUNNER_TEMP}/codesign-app.txt"
+          codesign --display --verbose=4 "${app_path}/Contents/Frameworks/whisper.framework" 2>&1 | tee "${RUNNER_TEMP}/codesign-whisper.txt"
+
       - name: Upload build logs
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: build-logs-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/build-logs
+          path: |
+            ${{ runner.temp }}/build-logs
+            ${{ runner.temp }}/codesign-app.txt
+            ${{ runner.temp }}/codesign-whisper.txt
           if-no-files-found: ignore
 
       - name: Package DMG
