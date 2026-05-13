@@ -5,9 +5,9 @@
 	<key>SUEnableInstallerLauncherService</key>
 	<true/>
 	<key>SUFeedURL</key>
-	<string>https://beingpax.github.io/VoiceInk/appcast.xml</string>
+	<string>https://github.com/nobnobz/VoiceInk/releases/latest/download/appcast.xml</string>
 	<key>SUPublicEDKey</key>
-	<string>rLRdZIjK3gHKfqNlAF9nT7FbjwSvwkJ8BVn0v2mD1Mo=</string>
+	<string>fDStTzLii8Vg/o/AcAxM33CpSINYLjXcB4VMjeeKc70=</string>
 	<key>LSUIElement</key>
 	<false/>
 	<key>SUEnableAutomaticChecks</key>

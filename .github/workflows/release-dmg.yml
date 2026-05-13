@@ -30,6 +30,7 @@ jobs:
       SCHEME: VoiceInk
       CONFIGURATION: Release
       DERIVED_DATA: ${{ github.workspace }}/.derived-data
+      SPARKLE_VERSION: 2.9.1
 
     steps:
       - name: Check out repository
@@ -189,6 +190,70 @@ jobs:
           echo "dmg_path=${dmg_path}" >> "${GITHUB_OUTPUT}"
           echo "sha256_path=${dmg_path}.sha256" >> "${GITHUB_OUTPUT}"
 
+      - name: Create Sparkle appcast
+        id: sparkle
+        shell: bash
+        env:
+          SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
+          TAG_NAME: ${{ steps.release.outputs.tag_name }}
+          DMG_NAME: ${{ steps.release.outputs.dmg_name }}
+          DMG_PATH: ${{ steps.package.outputs.dmg_path }}
+        run: |
+          set -euo pipefail
+
+          if [[ -z "${SPARKLE_PRIVATE_KEY}" ]]; then
+            echo "SPARKLE_PRIVATE_KEY repository secret is required to sign Sparkle updates." >&2
+            exit 1
+          fi
+
+          sparkle_archive="${RUNNER_TEMP}/Sparkle-${SPARKLE_VERSION}.tar.xz"
+          sparkle_dir="${RUNNER_TEMP}/Sparkle-${SPARKLE_VERSION}"
+          private_key_path="${RUNNER_TEMP}/sparkle_private_key"
+          appcast_path="${RUNNER_TEMP}/appcast.xml"
+
+          curl -L \
+            -o "${sparkle_archive}" \
+            "https://github.com/sparkle-project/Sparkle/releases/download/${SPARKLE_VERSION}/Sparkle-${SPARKLE_VERSION}.tar.xz"
+          mkdir -p "${sparkle_dir}"
+          tar -xf "${sparkle_archive}" -C "${sparkle_dir}" --strip-components=1
+
+          printf '%s' "${SPARKLE_PRIVATE_KEY}" > "${private_key_path}"
+          chmod 600 "${private_key_path}"
+          signature_fragment="$("${sparkle_dir}/bin/sign_update" "${DMG_PATH}" -f "${private_key_path}")"
+          rm -f "${private_key_path}"
+
+          short_version="${TAG_NAME#v}"
+          build_version="$(awk -F' = ' '/CURRENT_PROJECT_VERSION = / { gsub(/;/, "", $2); print $2; exit }' "${PROJECT}/project.pbxproj")"
+          pub_date="$(LC_ALL=C date -u '+%a, %d %b %Y %H:%M:%S %z')"
+          release_url="https://github.com/${GITHUB_REPOSITORY}/releases/tag/${TAG_NAME}"
+          download_url="https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG_NAME}/${DMG_NAME}"
+
+          cat > "${appcast_path}" <<EOF
+          <?xml version="1.0" encoding="utf-8"?>
+          <rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
+            <channel>
+              <title>VoiceInk Updates</title>
+              <link>https://github.com/${GITHUB_REPOSITORY}/releases</link>
+              <description>VoiceInk updates for this fork.</description>
+              <language>en</language>
+              <item>
+                <title>Version ${short_version}</title>
+                <link>${release_url}</link>
+                <sparkle:version>${build_version}</sparkle:version>
+                <sparkle:shortVersionString>${short_version}</sparkle:shortVersionString>
+                <pubDate>${pub_date}</pubDate>
+                <enclosure
+                  url="${download_url}"
+                  ${signature_fragment}
+                  type="application/x-apple-diskimage" />
+              </item>
+            </channel>
+          </rss>
+          EOF
+
+          xmllint --noout "${appcast_path}"
+          echo "appcast_path=${appcast_path}" >> "${GITHUB_OUTPUT}"
+
       - name: Upload workflow artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -196,6 +261,7 @@ jobs:
           path: |
             ${{ steps.package.outputs.dmg_path }}
             ${{ steps.package.outputs.sha256_path }}
+            ${{ steps.sparkle.outputs.appcast_path }}
 
       - name: Create or update GitHub release
         shell: bash
@@ -205,17 +271,19 @@ jobs:
           RELEASE_NAME: ${{ steps.release.outputs.release_name }}
           DMG_PATH: ${{ steps.package.outputs.dmg_path }}
           SHA256_PATH: ${{ steps.package.outputs.sha256_path }}
+          APPCAST_PATH: ${{ steps.sparkle.outputs.appcast_path }}
           PRERELEASE: ${{ inputs.prerelease || false }}
         run: |
           set -euo pipefail
 
           if gh release view "${TAG_NAME}" >/dev/null 2>&1; then
-            gh release upload "${TAG_NAME}" "${DMG_PATH}" "${SHA256_PATH}" --clobber
+            gh release upload "${TAG_NAME}" "${DMG_PATH}" "${SHA256_PATH}" "${APPCAST_PATH}" --clobber
           else
             release_args=(
               "${TAG_NAME}"
               "${DMG_PATH}"
               "${SHA256_PATH}"
+              "${APPCAST_PATH}"
               --target "${GITHUB_SHA}"
               --title "${RELEASE_NAME}"
               --generate-notes
