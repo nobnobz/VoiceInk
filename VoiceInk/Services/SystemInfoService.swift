@@ -15,7 +15,7 @@ class SystemInfoService {
         APP INFORMATION:
         App Version: \(getAppVersion())
         Build Version: \(getBuildVersion())
-        License Status: \(getLicenseStatus())
+        Build Type: \(getBuildType())
 
         OPERATING SYSTEM:
         macOS Version: \(ProcessInfo.processInfo.operatingSystemVersionString)
@@ -214,17 +214,8 @@ class SystemInfoService {
         }
     }
 
-    private func getLicenseStatus() -> String {
-        let licenseManager = LicenseManager.shared
-
-        // Check for existing license key and activation
-        if licenseManager.licenseKey != nil {
-            if licenseManager.activationId != nil || !UserDefaults.standard.bool(forKey: "VoiceInkLicenseRequiresActivation") {
-                return "Licensed (Pro)"
-            }
-        }
-
-        return "Not Licensed"
+    private func getBuildType() -> String {
+        return "Fork build"
     }
 
     private func getCurrentLanguage() -> String {

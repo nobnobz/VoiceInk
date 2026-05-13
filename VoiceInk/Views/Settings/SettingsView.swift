@@ -18,7 +18,6 @@ struct SettingsView: View {
     @ObservedObject private var playbackController = PlaybackController.shared
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = true
     @AppStorage("autoUpdateCheck") private var autoUpdateCheck = true
-    @AppStorage("enableAnnouncements") private var enableAnnouncements = true
     @AppStorage("restoreClipboardAfterPaste") private var restoreClipboardAfterPaste = true
     @AppStorage("clipboardRestoreDelay") private var clipboardRestoreDelay = 2.0
     @AppStorage("useAppleScriptPaste") private var useAppleScriptPaste = false
@@ -216,15 +215,6 @@ struct SettingsView: View {
                 Toggle("Auto-check Updates", isOn: $autoUpdateCheck)
                     .onChange(of: autoUpdateCheck) { _, newValue in
                         updaterViewModel.toggleAutoUpdates(newValue)
-                    }
-
-                Toggle("Show Announcements", isOn: $enableAnnouncements)
-                    .onChange(of: enableAnnouncements) { _, newValue in
-                        if newValue {
-                            AnnouncementsService.shared.start()
-                        } else {
-                            AnnouncementsService.shared.stop()
-                        }
                     }
 
                 HStack {
