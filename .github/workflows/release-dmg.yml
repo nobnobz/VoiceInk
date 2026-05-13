@@ -75,7 +75,12 @@ jobs:
         run: |
           set -euo pipefail
 
+          logs_dir="${RUNNER_TEMP}/build-logs"
+          xcodebuild_log="${logs_dir}/xcodebuild.log"
+
+          mkdir -p "${logs_dir}"
           rm -rf "${DERIVED_DATA}"
+          set +e
           xcodebuild \
             -project "${PROJECT}" \
             -scheme "${SCHEME}" \
@@ -90,7 +95,29 @@ jobs:
             CODE_SIGN_ENTITLEMENTS="${GITHUB_WORKSPACE}/VoiceInk/VoiceInk.local.entitlements" \
             ONLY_ACTIVE_ARCH=NO \
             SWIFT_ACTIVE_COMPILATION_CONDITIONS='$(inherited) LOCAL_BUILD' \
-            build
+            build 2>&1 | tee "${xcodebuild_log}"
+          xcodebuild_status="${PIPESTATUS[0]}"
+          set -e
+
+          if [[ "${xcodebuild_status}" -ne 0 ]]; then
+            {
+              echo "### xcodebuild failed"
+              echo
+              echo '```text'
+              tail -n 200 "${xcodebuild_log}"
+              echo '```'
+            } >> "${GITHUB_STEP_SUMMARY}"
+          fi
+
+          exit "${xcodebuild_status}"
+
+      - name: Upload build logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-logs-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/build-logs
+          if-no-files-found: ignore
 
       - name: Package DMG
         id: package
