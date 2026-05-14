@@ -118,8 +118,22 @@ struct PowerModeRow: View {
     var body: some View {
         Button(action: action) {
             HStack(spacing: 8) {
-                Text(config.emoji)
-                    .font(.system(size: 14))
+                if usesLiquidGlassDesign {
+                    RecorderIconGlyph(
+                        icon: config.emoji,
+                        fallbackSystemName: "bolt.fill",
+                        size: 12.5,
+                        weight: .semibold,
+                        color: RecorderGlassStyle.secondaryContent(
+                            usesLiquidGlass: usesLiquidGlassDesign,
+                            colorScheme: colorScheme
+                        )
+                    )
+                    .frame(width: 16)
+                } else {
+                    Text(config.emoji)
+                        .font(.system(size: 14))
+                }
 
                 Text(config.name)
                     .foregroundColor(
@@ -159,15 +173,6 @@ struct PowerModeRow: View {
         if usesLiquidGlassDesign {
             RoundedRectangle(cornerRadius: 6, style: .continuous)
                 .fill(isSelected || isHovering ? RecorderGlassStyle.selectionFill(colorScheme: colorScheme) : Color.clear)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 6, style: .continuous)
-                        .stroke(
-                            isSelected
-                                ? RecorderGlassStyle.controlStroke(isEnabled: true, colorScheme: colorScheme)
-                                : Color.clear,
-                            lineWidth: 0.6
-                        )
-                )
         } else {
             Color.white.opacity(isSelected ? 0.1 : 0)
         }

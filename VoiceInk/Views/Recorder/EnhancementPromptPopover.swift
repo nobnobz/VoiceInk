@@ -99,10 +99,20 @@ struct EnhancementPromptRow: View {
     var body: some View {
         Button(action: action) {
             HStack(spacing: 8) {
-                // Use the icon from the prompt
-                Image(systemName: prompt.icon)
-                    .font(.system(size: 14))
-                    .foregroundColor(iconColor)
+                if usesLiquidGlassDesign {
+                    RecorderIconGlyph(
+                        icon: promptIcon,
+                        fallbackSystemName: "wand.and.sparkles",
+                        size: 12.5,
+                        weight: .semibold,
+                        color: iconColor
+                    )
+                    .frame(width: 16)
+                } else {
+                    Image(systemName: prompt.icon)
+                        .font(.system(size: 14))
+                        .foregroundColor(iconColor)
+                }
 
                 Text(prompt.title)
                     .foregroundColor(titleColor)
@@ -165,20 +175,15 @@ struct EnhancementPromptRow: View {
         )
     }
 
+    private var promptIcon: String {
+        prompt.icon == "checkmark.seal.fill" ? "wand.and.sparkles" : prompt.icon
+    }
+
     @ViewBuilder
     private var rowBackground: some View {
         if usesLiquidGlassDesign {
             RoundedRectangle(cornerRadius: 6, style: .continuous)
                 .fill(isSelected || isHovering ? RecorderGlassStyle.selectionFill(colorScheme: colorScheme) : Color.clear)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 6, style: .continuous)
-                        .stroke(
-                            isSelected
-                                ? RecorderGlassStyle.controlStroke(isEnabled: true, colorScheme: colorScheme)
-                                : Color.clear,
-                            lineWidth: 0.6
-                        )
-                )
         } else {
             Color.white.opacity(isSelected ? 0.1 : 0)
         }

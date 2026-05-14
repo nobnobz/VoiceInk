@@ -119,6 +119,10 @@ struct MiniRecorderView<S: RecorderStateProvider & ObservableObject>: View {
         if usesLiquidGlassDesign {
             if usesExternalGlass {
                 pillContent
+                    .background {
+                        RecorderGlassLegibilityLayer(shape: pillShape)
+                    }
+                    .clipShape(pillShape)
             } else {
                 pillContent
                     .background {
