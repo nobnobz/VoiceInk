@@ -30,7 +30,7 @@ enum RecorderGlassStyle {
         case disabled
     }
 
-    static func content(_ role: ContentRole, usesLiquidGlass: Bool, colorScheme: ColorScheme) -> Color {
+    static func content(_ role: ContentRole, usesLiquidGlass: Bool, colorScheme _: ColorScheme) -> Color {
         guard usesLiquidGlass else {
             switch role {
             case .primary: return .white
@@ -40,15 +40,11 @@ enum RecorderGlassStyle {
             }
         }
 
-        switch (role, colorScheme) {
-        case (.primary, .dark): return .white.opacity(0.97)
-        case (.secondary, .dark): return .white.opacity(0.76)
-        case (.muted, .dark): return .white.opacity(0.54)
-        case (.disabled, .dark): return .white.opacity(0.34)
-        case (.primary, _): return .black.opacity(0.86)
-        case (.secondary, _): return .black.opacity(0.64)
-        case (.muted, _): return .black.opacity(0.46)
-        case (.disabled, _): return .black.opacity(0.30)
+        switch role {
+        case .primary: return .white.opacity(0.96)
+        case .secondary: return .white.opacity(0.72)
+        case .muted: return .white.opacity(0.54)
+        case .disabled: return .white.opacity(0.34)
         }
     }
 
@@ -68,138 +64,107 @@ enum RecorderGlassStyle {
         content(.disabled, usesLiquidGlass: usesLiquidGlass, colorScheme: colorScheme)
     }
 
-    static func divider(usesLiquidGlass: Bool, colorScheme: ColorScheme) -> Color {
+    static func divider(usesLiquidGlass: Bool, colorScheme _: ColorScheme) -> Color {
         guard usesLiquidGlass else { return .white.opacity(0.15) }
-        return colorScheme == .dark ? .white.opacity(0.12) : .black.opacity(0.075)
+        return .white.opacity(0.14)
     }
 
-    static func contentShadow(usesLiquidGlass: Bool, colorScheme: ColorScheme) -> Color {
+    static func contentShadow(usesLiquidGlass: Bool, colorScheme _: ColorScheme) -> Color {
         guard usesLiquidGlass else { return .clear }
-        return colorScheme == .dark ? .black.opacity(0.48) : .white.opacity(0.58)
+        return .black.opacity(0.68)
     }
 
-    static func glassBackground(colorScheme: ColorScheme, reduceTransparency: Bool) -> LinearGradient {
+    static func glassBackground(colorScheme _: ColorScheme, reduceTransparency: Bool) -> LinearGradient {
         if reduceTransparency {
             return LinearGradient(
-                colors: colorScheme == .dark
-                    ? [Color.black.opacity(0.82), Color.black.opacity(0.74)]
-                    : [Color.white.opacity(0.94), Color.white.opacity(0.86)],
+                colors: [
+                    Color.black.opacity(0.78),
+                    Color.black.opacity(0.68)
+                ],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
         }
 
         return LinearGradient(
-            colors: colorScheme == .dark
-                ? [
-                    Color.white.opacity(0.16),
-                    Color.black.opacity(0.12),
-                    Color.black.opacity(0.34)
-                ]
-                : [
-                    Color.white.opacity(0.42),
-                    Color.white.opacity(0.16),
-                    Color.black.opacity(0.085)
-                ],
+            colors: [
+                Color.white.opacity(0.10),
+                Color.white.opacity(0.025),
+                Color.black.opacity(0.18),
+                Color.black.opacity(0.34)
+            ],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
         )
     }
 
-    static func adaptiveScrim(colorScheme: ColorScheme, reduceTransparency: Bool) -> LinearGradient {
+    static func adaptiveScrim(colorScheme _: ColorScheme, reduceTransparency: Bool) -> LinearGradient {
         LinearGradient(
-            colors: colorScheme == .dark
-                ? [
-                    Color.black.opacity(reduceTransparency ? 0.20 : 0.08),
-                    Color.black.opacity(reduceTransparency ? 0.30 : 0.20),
-                    Color.white.opacity(0.04)
-                ]
-                : [
-                    Color.white.opacity(reduceTransparency ? 0.18 : 0.08),
-                    Color.clear,
-                    Color.black.opacity(reduceTransparency ? 0.10 : 0.07)
-                ],
+            colors: [
+                Color.black.opacity(reduceTransparency ? 0.20 : 0.12),
+                Color.black.opacity(reduceTransparency ? 0.26 : 0.06),
+                Color.black.opacity(reduceTransparency ? 0.30 : 0.22)
+            ],
             startPoint: .top,
             endPoint: .bottomTrailing
         )
     }
 
-    static func edgeHighlight(colorScheme: ColorScheme) -> LinearGradient {
+    static func edgeHighlight(colorScheme _: ColorScheme) -> LinearGradient {
         LinearGradient(
-            colors: colorScheme == .dark
-                ? [
-                    Color.white.opacity(0.38),
-                    Color.white.opacity(0.11),
-                    Color.black.opacity(0.36)
-                ]
-                : [
-                    Color.white.opacity(0.78),
-                    Color.white.opacity(0.22),
-                    Color.black.opacity(0.24)
-                ],
+            colors: [
+                Color.white.opacity(0.58),
+                Color.white.opacity(0.20),
+                Color.white.opacity(0.07),
+                Color.black.opacity(0.30)
+            ],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
         )
     }
 
-    static func innerHighlight(colorScheme: ColorScheme) -> LinearGradient {
+    static func innerHighlight(colorScheme _: ColorScheme) -> LinearGradient {
         LinearGradient(
-            colors: colorScheme == .dark
-                ? [
-                    Color.white.opacity(0.20),
-                    Color.white.opacity(0.04),
-                    Color.clear
-                ]
-                : [
-                    Color.white.opacity(0.38),
-                    Color.white.opacity(0.08),
-                    Color.clear
-                ],
+            colors: [
+                Color.white.opacity(0.30),
+                Color.white.opacity(0.08),
+                Color.clear
+            ],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
         )
     }
 
-    static func outerShadow(colorScheme: ColorScheme) -> Color {
-        colorScheme == .dark ? .black.opacity(0.46) : .black.opacity(0.22)
+    static func outerShadow(colorScheme _: ColorScheme) -> Color {
+        .black.opacity(0.42)
     }
 
-    static func controlFill(isEnabled: Bool, isPressed: Bool, isHovering: Bool, colorScheme: ColorScheme) -> LinearGradient {
+    static func controlFill(isEnabled: Bool, isPressed: Bool, isHovering: Bool, colorScheme _: ColorScheme) -> LinearGradient {
         let activeBoost = isEnabled ? 1.0 : 0.55
         let pressBoost = isPressed ? 1.22 : (isHovering ? 1.10 : 1.0)
         return LinearGradient(
-            colors: colorScheme == .dark
-                ? [
-                    Color.white.opacity(0.14 * activeBoost * pressBoost),
-                    Color.white.opacity(0.07 * activeBoost),
-                    Color.black.opacity(0.18)
-                ]
-                : [
-                    Color.white.opacity(0.46 * activeBoost * pressBoost),
-                    Color.white.opacity(0.14 * activeBoost),
-                    Color.black.opacity(0.06)
-                ],
+            colors: [
+                Color.white.opacity(0.18 * activeBoost * pressBoost),
+                Color.white.opacity(0.08 * activeBoost),
+                Color.black.opacity(0.22)
+            ],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
         )
     }
 
-    static func controlStroke(isEnabled: Bool, colorScheme: ColorScheme) -> Color {
+    static func controlStroke(isEnabled: Bool, colorScheme _: ColorScheme) -> Color {
         let opacity = isEnabled ? 1.0 : 0.55
-        return colorScheme == .dark
-            ? Color.white.opacity(0.20 * opacity)
-            : Color.black.opacity(0.12 * opacity)
+        return Color.white.opacity(0.22 * opacity)
     }
 
-    static func selectionFill(colorScheme: ColorScheme) -> Color {
-        colorScheme == .dark ? Color.white.opacity(0.12) : Color.black.opacity(0.055)
+    static func selectionFill(colorScheme _: ColorScheme) -> Color {
+        Color.white.opacity(0.13)
     }
 
-    static func successContent(usesLiquidGlass: Bool, colorScheme: ColorScheme) -> Color {
+    static func successContent(usesLiquidGlass: Bool, colorScheme _: ColorScheme) -> Color {
         guard usesLiquidGlass else { return .green }
-        return colorScheme == .dark
-            ? Color(red: 0.57, green: 0.95, blue: 0.70)
-            : Color(red: 0.05, green: 0.45, blue: 0.24)
+        return Color(red: 0.58, green: 0.96, blue: 0.72)
     }
 }
 
@@ -231,20 +196,22 @@ struct RecorderGlassLegibilityLayer<S: Shape>: View {
 
 struct RecorderLiquidGlassSurface<S: Shape>: View {
     let shape: S
-    let material: NSVisualEffectView.Material
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
 
-    init(shape: S, material: NSVisualEffectView.Material = .popover) {
+    init(shape: S) {
         self.shape = shape
-        self.material = material
     }
 
     var body: some View {
         ZStack {
-            VisualEffectView(
-                material: material,
-                blendingMode: .behindWindow
-            )
-            .clipShape(shape)
+            if reduceTransparency {
+                shape.fill(Color.black.opacity(0.74))
+            } else {
+                GlassEffectContainer {
+                    Color.clear
+                        .glassEffect(.clear, in: shape)
+                }
+            }
 
             RecorderGlassLegibilityLayer(shape: shape)
         }

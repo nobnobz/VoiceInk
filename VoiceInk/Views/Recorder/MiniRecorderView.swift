@@ -5,6 +5,7 @@ struct MiniRecorderView<S: RecorderStateProvider & ObservableObject>: View {
     @ObservedObject var stateProvider: S
     @ObservedObject var recorder: Recorder
     let usesLiquidGlassDesign: Bool
+    let usesExternalGlass: Bool
     @EnvironmentObject var windowManager: MiniWindowManager
     @EnvironmentObject private var enhancementService: AIEnhancementService
     @Environment(\.colorScheme) private var colorScheme
@@ -15,11 +16,13 @@ struct MiniRecorderView<S: RecorderStateProvider & ObservableObject>: View {
     init(
         stateProvider: S,
         recorder: Recorder,
-        usesLiquidGlassDesign: Bool = true
+        usesLiquidGlassDesign: Bool = true,
+        usesExternalGlass: Bool = false
     ) {
         self.stateProvider = stateProvider
         self.recorder = recorder
         self.usesLiquidGlassDesign = usesLiquidGlassDesign
+        self.usesExternalGlass = usesExternalGlass
     }
 
     // MARK: - Layout Constants
@@ -114,7 +117,13 @@ struct MiniRecorderView<S: RecorderStateProvider & ObservableObject>: View {
     private var pill: some View {
         if usesLiquidGlassDesign {
             pillContent
-                .background { RecorderLiquidGlassSurface(shape: pillShape) }
+                .background {
+                    if usesExternalGlass {
+                        RecorderGlassLegibilityLayer(shape: pillShape)
+                    } else {
+                        RecorderLiquidGlassSurface(shape: pillShape)
+                    }
+                }
                 .clipShape(pillShape)
                 .shadow(
                     color: RecorderGlassStyle.outerShadow(colorScheme: colorScheme),
