@@ -1,29 +1,13 @@
 import SwiftUI
-import AppKit
 
 struct MiniRecorderView<S: RecorderStateProvider & ObservableObject>: View {
     @ObservedObject var stateProvider: S
     @ObservedObject var recorder: Recorder
-    let usesLiquidGlassDesign: Bool
-    let usesExternalGlass: Bool
     @EnvironmentObject var windowManager: MiniWindowManager
     @EnvironmentObject private var enhancementService: AIEnhancementService
-    @Environment(\.colorScheme) private var colorScheme
     @AppStorage("showLiveTextPreview") private var showLiveTextPreview = false
 
     @State private var activePopover: ActivePopoverState = .none
-
-    init(
-        stateProvider: S,
-        recorder: Recorder,
-        usesLiquidGlassDesign: Bool = true,
-        usesExternalGlass: Bool = false
-    ) {
-        self.stateProvider = stateProvider
-        self.recorder = recorder
-        self.usesLiquidGlassDesign = usesLiquidGlassDesign
-        self.usesExternalGlass = usesExternalGlass
-    }
 
     // MARK: - Layout Constants
 
@@ -32,22 +16,6 @@ struct MiniRecorderView<S: RecorderStateProvider & ObservableObject>: View {
     private let expandedWidth: CGFloat = 300
     private let compactCornerRadius: CGFloat = 20
     private let expandedCornerRadius: CGFloat = 14
-
-    private var pillWidth: CGFloat {
-        hasLiveTranscript ? expandedWidth : compactWidth
-    }
-
-    private var pillHeight: CGFloat {
-        controlBarHeight + (hasLiveTranscript ? 57 : 0)
-    }
-
-    private var pillCornerRadius: CGFloat {
-        hasLiveTranscript ? expandedCornerRadius : compactCornerRadius
-    }
-
-    private var pillShape: RoundedRectangle {
-        RoundedRectangle(cornerRadius: pillCornerRadius, style: .continuous)
-    }
 
     // true when live transcript is streaming in during recording
     private var hasLiveTranscript: Bool {
@@ -88,66 +56,22 @@ struct MiniRecorderView<S: RecorderStateProvider & ObservableObject>: View {
         VStack(spacing: 0) {
             if hasLiveTranscript {
                 LiveTranscriptView(text: stateProvider.partialTranscript)
-                RecorderGlassDivider()
+                Divider().background(Color.white.opacity(0.15))
             }
         }
     }
 
     var body: some View {
         if windowManager.isVisible {
-            pill
-                .animation(.easeInOut(duration: 0.3), value: hasLiveTranscript)
-                .onAppear(perform: syncWindowMetrics)
-                .onChange(of: hasLiveTranscript) {
-                    syncWindowMetrics()
-                }
-        }
-    }
-
-    private var pillContent: some View {
-        VStack(spacing: 0) {
-            transcriptSection
-            controlBar
-        }
-        .frame(width: pillWidth, height: pillHeight)
-        .environment(\.recorderUsesLiquidGlass, usesLiquidGlassDesign)
-        .environment(\.recorderUsesExternalGlass, usesExternalGlass)
-    }
-
-    @ViewBuilder
-    private var pill: some View {
-        if usesLiquidGlassDesign {
-            if usesExternalGlass {
-                pillContent
-                    .background {
-                        RecorderGlassLegibilityLayer(shape: pillShape)
-                    }
-                    .clipShape(pillShape)
-            } else {
-                pillContent
-                    .background {
-                        RecorderLiquidGlassSurface(shape: pillShape)
-                    }
-                    .clipShape(pillShape)
-                    .shadow(
-                        color: RecorderGlassStyle.outerShadow(colorScheme: colorScheme),
-                        radius: hasLiveTranscript ? 24 : 18,
-                        x: 0,
-                        y: hasLiveTranscript ? 10 : 7
-                    )
+            VStack(spacing: 0) {
+                transcriptSection
+                controlBar
             }
-        } else {
-            pillContent
-                .background(Color.black)
-                .clipShape(pillShape)
+            .frame(width: hasLiveTranscript ? expandedWidth : compactWidth)
+            .background(Color.black)
+            .clipShape(RoundedRectangle(cornerRadius: hasLiveTranscript ? expandedCornerRadius : compactCornerRadius, style: .continuous))
+            .animation(.easeInOut(duration: 0.3), value: hasLiveTranscript)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
         }
-    }
-
-    private func syncWindowMetrics() {
-        windowManager.updateContentMetrics(
-            width: pillWidth,
-            height: pillHeight,
-            cornerRadius: pillCornerRadius
-        )
     }
 }

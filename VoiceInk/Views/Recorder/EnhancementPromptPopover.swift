@@ -3,23 +3,14 @@ import SwiftUI
 // Enhancement Prompt Popover for recorder views
 struct EnhancementPromptPopover: View {
     @EnvironmentObject var enhancementService: AIEnhancementService
-    @Environment(\.colorScheme) private var colorScheme
-    @Environment(\.recorderUsesLiquidGlass) private var usesLiquidGlassDesign
     @State private var selectedPrompt: CustomPrompt?
-
-    private let popoverShape = RoundedRectangle(cornerRadius: 12, style: .continuous)
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             // Enhancement Toggle at the top
             HStack(spacing: 8) {
                 Toggle("AI Enhancement", isOn: $enhancementService.isEnhancementEnabled)
-                    .foregroundColor(
-                        RecorderGlassStyle.primaryContent(
-                            usesLiquidGlass: usesLiquidGlassDesign,
-                            colorScheme: colorScheme
-                        )
-                    )
+                    .foregroundColor(.white.opacity(0.9))
                     .font(.headline)
                     .lineLimit(1)
 
@@ -28,7 +19,8 @@ struct EnhancementPromptPopover: View {
             .padding(.horizontal)
             .padding(.top, 8)
 
-            RecorderGlassDivider()
+            Divider()
+                .background(Color.white.opacity(0.1))
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 4) {
@@ -55,32 +47,14 @@ struct EnhancementPromptPopover: View {
         .frame(width: 200)
         .frame(maxHeight: 340)
         .padding(.vertical, 8)
-        .background { popoverBackground }
-        .clipShape(popoverShape)
-        .shadow(
-            color: usesLiquidGlassDesign
-                ? RecorderGlassStyle.outerShadow(colorScheme: colorScheme)
-                : .clear,
-            radius: 22,
-            x: 0,
-            y: 12
-        )
-        .environment(\.colorScheme, usesLiquidGlassDesign ? colorScheme : .dark)
+        .background(Color.black)
+        .environment(\.colorScheme, .dark)
         .onAppear {
             // Set the initially selected prompt
             selectedPrompt = enhancementService.activePrompt
         }
         .onChange(of: enhancementService.selectedPromptId) { oldValue, newValue in
             selectedPrompt = enhancementService.activePrompt
-        }
-    }
-
-    @ViewBuilder
-    private var popoverBackground: some View {
-        if usesLiquidGlassDesign {
-            RecorderLiquidGlassSurface(shape: popoverShape, role: .popover)
-        } else {
-            Color.black
         }
     }
 }
@@ -92,47 +66,23 @@ struct EnhancementPromptRow: View {
     let isDisabled: Bool
     let action: () -> Void
 
-    @Environment(\.colorScheme) private var colorScheme
-    @Environment(\.recorderUsesLiquidGlass) private var usesLiquidGlassDesign
-    @State private var isHovering = false
-
     var body: some View {
         Button(action: action) {
             HStack(spacing: 8) {
-                if usesLiquidGlassDesign {
-                    RecorderIconGlyph(
-                        icon: promptIcon,
-                        fallbackSystemName: "wand.and.sparkles",
-                        size: 12.5,
-                        weight: .semibold,
-                        color: iconColor
-                    )
-                    .frame(width: 16)
-                } else {
-                    Image(systemName: prompt.icon)
-                        .font(.system(size: 14))
-                        .foregroundColor(iconColor)
-                }
+                // Use the icon from the prompt
+                Image(systemName: prompt.icon)
+                    .font(.system(size: 14))
+                    .foregroundColor(isDisabled ? .white.opacity(0.4) : .white.opacity(0.7))
 
                 Text(prompt.title)
-                    .foregroundColor(titleColor)
+                    .foregroundColor(isDisabled ? .white.opacity(0.4) : .white.opacity(0.9))
                     .font(.system(size: 13))
                     .lineLimit(1)
 
                 if isSelected {
                     Spacer()
                     Image(systemName: "checkmark")
-                        .foregroundColor(
-                            isDisabled
-                                ? RecorderGlassStyle.successContent(
-                                    usesLiquidGlass: usesLiquidGlassDesign,
-                                    colorScheme: colorScheme
-                                ).opacity(0.55)
-                                : RecorderGlassStyle.successContent(
-                                    usesLiquidGlass: usesLiquidGlassDesign,
-                                    colorScheme: colorScheme
-                                )
-                        )
+                        .foregroundColor(isDisabled ? .green.opacity(0.7) : .green)
                         .font(.system(size: 10))
                 }
             }
@@ -142,50 +92,7 @@ struct EnhancementPromptRow: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .background { rowBackground }
-        .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
-        .onHover { isHovering = $0 }
-    }
-
-    private var titleColor: Color {
-        if isDisabled {
-            return RecorderGlassStyle.disabledContent(
-                usesLiquidGlass: usesLiquidGlassDesign,
-                colorScheme: colorScheme
-            )
-        }
-
-        return RecorderGlassStyle.primaryContent(
-            usesLiquidGlass: usesLiquidGlassDesign,
-            colorScheme: colorScheme
-        )
-    }
-
-    private var iconColor: Color {
-        if isDisabled {
-            return RecorderGlassStyle.disabledContent(
-                usesLiquidGlass: usesLiquidGlassDesign,
-                colorScheme: colorScheme
-            )
-        }
-
-        return RecorderGlassStyle.secondaryContent(
-            usesLiquidGlass: usesLiquidGlassDesign,
-            colorScheme: colorScheme
-        )
-    }
-
-    private var promptIcon: String {
-        prompt.icon == "checkmark.seal.fill" ? "wand.and.sparkles" : prompt.icon
-    }
-
-    @ViewBuilder
-    private var rowBackground: some View {
-        if usesLiquidGlassDesign {
-            RoundedRectangle(cornerRadius: 6, style: .continuous)
-                .fill(isSelected || isHovering ? RecorderGlassStyle.selectionFill(colorScheme: colorScheme) : Color.clear)
-        } else {
-            Color.white.opacity(isSelected ? 0.1 : 0)
-        }
+        .background(isSelected ? Color.white.opacity(0.1) : Color.clear)
+        .cornerRadius(4)
     }
 }

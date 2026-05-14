@@ -47,7 +47,6 @@ class SystemInfoService {
         UI SETTINGS:
         Hide Dock Icon: \(UserDefaults.standard.bool(forKey: "IsMenuBarOnly"))
         Recorder Style: \(UserDefaults.standard.string(forKey: "RecorderType") ?? "mini")
-        Recorder Appearance: \(UserDefaults.standard.bool(forKey: "UseLiquidGlassDesign") ? "Liquid Glass" : "Classic")
 
         RECORDING FEEDBACK:
         Sound Feedback: \(UserDefaults.standard.bool(forKey: "isSoundFeedbackEnabled"))

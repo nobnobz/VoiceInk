@@ -2,26 +2,18 @@ import SwiftUI
 
 struct PowerModePopover: View {
     @ObservedObject var powerModeManager = PowerModeManager.shared
-    @Environment(\.colorScheme) private var colorScheme
-    @Environment(\.recorderUsesLiquidGlass) private var usesLiquidGlassDesign
     @State private var selectedConfig: PowerModeConfig?
-
-    private let popoverShape = RoundedRectangle(cornerRadius: 12, style: .continuous)
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Select Power Mode")
                 .font(.headline)
-                .foregroundColor(
-                    RecorderGlassStyle.primaryContent(
-                        usesLiquidGlass: usesLiquidGlassDesign,
-                        colorScheme: colorScheme
-                    )
-                )
+                .foregroundColor(.white.opacity(0.9))
                 .padding(.horizontal)
                 .padding(.top, 8)
 
-            RecorderGlassDivider()
+            Divider()
+                .background(Color.white.opacity(0.1))
 
             ScrollView {
                 let enabledConfigs = powerModeManager.configurations.filter { $0.isEnabled }
@@ -29,20 +21,10 @@ struct PowerModePopover: View {
                     if enabledConfigs.isEmpty {
                         VStack(alignment: .center, spacing: 8) {
                             Image(systemName: "sparkles")
-                                .foregroundColor(
-                                    RecorderGlassStyle.secondaryContent(
-                                        usesLiquidGlass: usesLiquidGlassDesign,
-                                        colorScheme: colorScheme
-                                    )
-                                )
+                                .foregroundColor(.white.opacity(0.6))
                                 .font(.system(size: 16))
                             Text("No Power Modes Available")
-                                .foregroundColor(
-                                    RecorderGlassStyle.primaryContent(
-                                        usesLiquidGlass: usesLiquidGlassDesign,
-                                        colorScheme: colorScheme
-                                    )
-                                )
+                                .foregroundColor(.white.opacity(0.8))
                                 .font(.system(size: 13))
                                 .lineLimit(1)
                                 .truncationMode(.tail)
@@ -69,17 +51,8 @@ struct PowerModePopover: View {
         .frame(width: 180)
         .frame(maxHeight: 340)
         .padding(.vertical, 8)
-        .background { popoverBackground }
-        .clipShape(popoverShape)
-        .shadow(
-            color: usesLiquidGlassDesign
-                ? RecorderGlassStyle.outerShadow(colorScheme: colorScheme)
-                : .clear,
-            radius: 22,
-            x: 0,
-            y: 12
-        )
-        .environment(\.colorScheme, usesLiquidGlassDesign ? colorScheme : .dark)
+        .background(Color.black)
+        .environment(\.colorScheme, .dark)
         .onAppear {
             selectedConfig = powerModeManager.activeConfiguration
         }
@@ -95,15 +68,6 @@ struct PowerModePopover: View {
             }
         }
     }
-
-    @ViewBuilder
-    private var popoverBackground: some View {
-        if usesLiquidGlassDesign {
-            RecorderLiquidGlassSurface(shape: popoverShape, role: .popover)
-        } else {
-            Color.black
-        }
-    }
 }
 
 struct PowerModeRow: View {
@@ -111,49 +75,21 @@ struct PowerModeRow: View {
     let isSelected: Bool
     let action: () -> Void
 
-    @Environment(\.colorScheme) private var colorScheme
-    @Environment(\.recorderUsesLiquidGlass) private var usesLiquidGlassDesign
-    @State private var isHovering = false
-
     var body: some View {
         Button(action: action) {
             HStack(spacing: 8) {
-                if usesLiquidGlassDesign {
-                    RecorderIconGlyph(
-                        icon: config.emoji,
-                        fallbackSystemName: "bolt.fill",
-                        size: 12.5,
-                        weight: .semibold,
-                        color: RecorderGlassStyle.secondaryContent(
-                            usesLiquidGlass: usesLiquidGlassDesign,
-                            colorScheme: colorScheme
-                        )
-                    )
-                    .frame(width: 16)
-                } else {
-                    Text(config.emoji)
-                        .font(.system(size: 14))
-                }
+                Text(config.emoji)
+                    .font(.system(size: 14))
 
                 Text(config.name)
-                    .foregroundColor(
-                        RecorderGlassStyle.primaryContent(
-                            usesLiquidGlass: usesLiquidGlassDesign,
-                            colorScheme: colorScheme
-                        )
-                    )
+                    .foregroundColor(.white.opacity(0.9))
                     .font(.system(size: 13))
                     .lineLimit(1)
 
                 if isSelected {
                     Spacer()
                     Image(systemName: "checkmark")
-                        .foregroundColor(
-                            RecorderGlassStyle.successContent(
-                                usesLiquidGlass: usesLiquidGlassDesign,
-                                colorScheme: colorScheme
-                            )
-                        )
+                        .foregroundColor(.green)
                         .font(.system(size: 10))
                 }
             }
@@ -163,18 +99,7 @@ struct PowerModeRow: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .background { rowBackground }
-        .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
-        .onHover { isHovering = $0 }
-    }
-
-    @ViewBuilder
-    private var rowBackground: some View {
-        if usesLiquidGlassDesign {
-            RoundedRectangle(cornerRadius: 6, style: .continuous)
-                .fill(isSelected || isHovering ? RecorderGlassStyle.selectionFill(colorScheme: colorScheme) : Color.clear)
-        } else {
-            Color.white.opacity(isSelected ? 0.1 : 0)
-        }
+        .background(isSelected ? Color.white.opacity(0.1) : Color.clear)
+        .cornerRadius(4)
     }
 }

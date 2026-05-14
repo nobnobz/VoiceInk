@@ -5,9 +5,7 @@ struct NotchRecorderView<S: RecorderStateProvider & ObservableObject>: View {
     @ObservedObject var recorder: Recorder
     @EnvironmentObject var windowManager: NotchWindowManager
     @EnvironmentObject private var enhancementService: AIEnhancementService
-    @Environment(\.colorScheme) private var colorScheme
     @AppStorage("showLiveTextPreview") private var showLiveTextPreview = false
-    @AppStorage("UseLiquidGlassDesign") private var useLiquidGlassDesign = true
     @ObservedObject private var powerModeManager = PowerModeManager.shared
     @State private var activePopover: ActivePopoverState = .none
 
@@ -79,13 +77,6 @@ struct NotchRecorderView<S: RecorderStateProvider & ObservableObject>: View {
         displayState == .liveText ? transcriptSideExpansion : recordingSideExpansion
     }
 
-    private var pillShape: NotchShape {
-        NotchShape(
-            topCornerRadius: displayState == .liveText ? 12 : 8,
-            bottomCornerRadius: displayState == .liveText ? 22 : 16
-        )
-    }
-
     // MARK: - Animation
 
     private let expandAnimation = Animation.spring(response: 0.42, dampingFraction: 0.80)
@@ -114,28 +105,13 @@ struct NotchRecorderView<S: RecorderStateProvider & ObservableObject>: View {
             liveTextPanel
         }
         .frame(width: pillWidth, height: pillHeight)
-        .environment(\.recorderUsesLiquidGlass, useLiquidGlassDesign)
-        .background { pillBackground }
-        .clipShape(pillShape)
-        .shadow(
-            color: useLiquidGlassDesign
-                ? RecorderGlassStyle.outerShadow(colorScheme: colorScheme)
-                : .clear,
-            radius: displayState == .liveText ? 24 : 18,
-            x: 0,
-            y: displayState == .liveText ? 10 : 7
+        .background(Color.black)
+        .clipShape(
+            NotchShape(
+                topCornerRadius: displayState == .liveText ? 12 : 8,
+                bottomCornerRadius: displayState == .liveText ? 22 : 16
+            )
         )
-    }
-
-    @ViewBuilder
-    private var pillBackground: some View {
-        if useLiquidGlassDesign {
-            ZStack {
-                RecorderLiquidGlassSurface(shape: pillShape)
-            }
-        } else {
-            Color.black
-        }
     }
 
     // MARK: - Main Row
@@ -183,7 +159,7 @@ struct NotchRecorderView<S: RecorderStateProvider & ObservableObject>: View {
     private var liveTextPanel: some View {
         VStack(spacing: 0) {
             if displayState == .liveText {
-                RecorderGlassDivider()
+                Divider().background(Color.white.opacity(0.15))
                 LiveTranscriptView(text: stateProvider.partialTranscript)
                     .padding(.horizontal, 8)
             }

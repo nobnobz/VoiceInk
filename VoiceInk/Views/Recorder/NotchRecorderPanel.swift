@@ -12,14 +12,10 @@ class NotchRecorderPanel: KeyablePanel {
 
     init(contentRect: NSRect) {
         let metrics = NotchRecorderPanel.calculateWindowMetrics()
-        let usesLiquidGlassDesign = UserDefaults.standard.bool(forKey: "UseLiquidGlassDesign")
-        let styleMask: NSWindow.StyleMask = usesLiquidGlassDesign
-            ? [.nonactivatingPanel, .fullSizeContentView]
-            : [.nonactivatingPanel, .fullSizeContentView, .hudWindow]
 
         super.init(
             contentRect: metrics.frame,
-            styleMask: styleMask,
+            styleMask: [.nonactivatingPanel, .fullSizeContentView, .hudWindow],
             backing: .buffered,
             defer: false
         )
@@ -33,7 +29,7 @@ class NotchRecorderPanel: KeyablePanel {
         self.isMovableByWindowBackground = false
         self.hidesOnDeactivate = false
         self.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary, .ignoresCycle]
-        self.appearance = usesLiquidGlassDesign ? nil : NSAppearance(named: .darkAqua)
+        self.appearance = NSAppearance(named: .darkAqua)
         self.styleMask.remove(.titled)
         self.titlebarAppearsTransparent = true
         self.titleVisibility = .hidden
