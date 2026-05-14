@@ -5,7 +5,6 @@ struct MiniRecorderView<S: RecorderStateProvider & ObservableObject>: View {
     @ObservedObject var stateProvider: S
     @ObservedObject var recorder: Recorder
     let usesLiquidGlassDesign: Bool
-    let usesExternalGlass: Bool
     @EnvironmentObject var windowManager: MiniWindowManager
     @EnvironmentObject private var enhancementService: AIEnhancementService
     @Environment(\.colorScheme) private var colorScheme
@@ -16,13 +15,11 @@ struct MiniRecorderView<S: RecorderStateProvider & ObservableObject>: View {
     init(
         stateProvider: S,
         recorder: Recorder,
-        usesLiquidGlassDesign: Bool = true,
-        usesExternalGlass: Bool = false
+        usesLiquidGlassDesign: Bool = true
     ) {
         self.stateProvider = stateProvider
         self.recorder = recorder
         self.usesLiquidGlassDesign = usesLiquidGlassDesign
-        self.usesExternalGlass = usesExternalGlass
     }
 
     // MARK: - Layout Constants
@@ -88,12 +85,7 @@ struct MiniRecorderView<S: RecorderStateProvider & ObservableObject>: View {
         VStack(spacing: 0) {
             if hasLiveTranscript {
                 LiveTranscriptView(text: stateProvider.partialTranscript)
-                Divider().background(
-                    RecorderGlassStyle.divider(
-                        usesLiquidGlass: usesLiquidGlassDesign,
-                        colorScheme: colorScheme
-                    )
-                )
+                RecorderGlassDivider()
             }
         }
     }
@@ -120,25 +112,16 @@ struct MiniRecorderView<S: RecorderStateProvider & ObservableObject>: View {
 
     @ViewBuilder
     private var pill: some View {
-        if usesExternalGlass {
+        if usesLiquidGlassDesign {
             pillContent
-                .background {
-                    RecorderGlassLegibilityLayer(shape: pillShape)
-                }
+                .background { RecorderLiquidGlassSurface(shape: pillShape) }
                 .clipShape(pillShape)
-        } else if usesLiquidGlassDesign {
-            pillContent
-                .background {
-                    ZStack {
-                        VisualEffectView(
-                            material: .underWindowBackground,
-                            blendingMode: .behindWindow,
-                            cornerRadius: pillCornerRadius
-                        )
-                        RecorderGlassLegibilityLayer(shape: pillShape)
-                    }
-                }
-                .clipShape(pillShape)
+                .shadow(
+                    color: RecorderGlassStyle.outerShadow(colorScheme: colorScheme),
+                    radius: hasLiveTranscript ? 24 : 18,
+                    x: 0,
+                    y: hasLiveTranscript ? 10 : 7
+                )
         } else {
             pillContent
                 .background(Color.black)

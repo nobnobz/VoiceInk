@@ -117,23 +117,20 @@ struct NotchRecorderView<S: RecorderStateProvider & ObservableObject>: View {
         .environment(\.recorderUsesLiquidGlass, useLiquidGlassDesign)
         .background { pillBackground }
         .clipShape(pillShape)
+        .shadow(
+            color: useLiquidGlassDesign
+                ? RecorderGlassStyle.outerShadow(colorScheme: colorScheme)
+                : .clear,
+            radius: displayState == .liveText ? 24 : 18,
+            x: 0,
+            y: displayState == .liveText ? 10 : 7
+        )
     }
 
     @ViewBuilder
     private var pillBackground: some View {
         if useLiquidGlassDesign {
-            ZStack {
-                VisualEffectView(material: .underWindowBackground, blendingMode: .behindWindow)
-
-                if #available(macOS 26.0, *) {
-                    GlassEffectContainer {
-                        Color.clear
-                            .glassEffect(.clear, in: pillShape)
-                    }
-                }
-
-                RecorderGlassLegibilityLayer(shape: pillShape)
-            }
+            RecorderLiquidGlassSurface(shape: pillShape)
         } else {
             Color.black
         }
@@ -184,12 +181,7 @@ struct NotchRecorderView<S: RecorderStateProvider & ObservableObject>: View {
     private var liveTextPanel: some View {
         VStack(spacing: 0) {
             if displayState == .liveText {
-                Divider().background(
-                    RecorderGlassStyle.divider(
-                        usesLiquidGlass: useLiquidGlassDesign,
-                        colorScheme: colorScheme
-                    )
-                )
+                RecorderGlassDivider()
                 LiveTranscriptView(text: stateProvider.partialTranscript)
                     .padding(.horizontal, 8)
             }

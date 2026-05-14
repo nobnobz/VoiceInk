@@ -21,13 +21,7 @@ struct PowerModePopover: View {
                 .padding(.horizontal)
                 .padding(.top, 8)
 
-            Divider()
-                .background(
-                    RecorderGlassStyle.divider(
-                        usesLiquidGlass: usesLiquidGlassDesign,
-                        colorScheme: colorScheme
-                    )
-                )
+            RecorderGlassDivider()
 
             ScrollView {
                 let enabledConfigs = powerModeManager.configurations.filter { $0.isEnabled }
@@ -97,14 +91,7 @@ struct PowerModePopover: View {
     @ViewBuilder
     private var popoverBackground: some View {
         if usesLiquidGlassDesign {
-            ZStack {
-                VisualEffectView(
-                    material: .popover,
-                    blendingMode: .behindWindow,
-                    cornerRadius: 12
-                )
-                RecorderGlassLegibilityLayer(shape: popoverShape)
-            }
+            RecorderLiquidGlassSurface(shape: popoverShape)
         } else {
             Color.black
         }

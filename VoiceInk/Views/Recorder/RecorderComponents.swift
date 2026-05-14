@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 
 // MARK: - Shared Popover State
 
@@ -40,13 +41,13 @@ enum RecorderGlassStyle {
         }
 
         switch (role, colorScheme) {
-        case (.primary, .dark): return .white.opacity(0.96)
-        case (.secondary, .dark): return .white.opacity(0.74)
-        case (.muted, .dark): return .white.opacity(0.52)
+        case (.primary, .dark): return .white.opacity(0.97)
+        case (.secondary, .dark): return .white.opacity(0.76)
+        case (.muted, .dark): return .white.opacity(0.54)
         case (.disabled, .dark): return .white.opacity(0.34)
-        case (.primary, _): return .black.opacity(0.82)
-        case (.secondary, _): return .black.opacity(0.62)
-        case (.muted, _): return .black.opacity(0.44)
+        case (.primary, _): return .black.opacity(0.86)
+        case (.secondary, _): return .black.opacity(0.64)
+        case (.muted, _): return .black.opacity(0.46)
         case (.disabled, _): return .black.opacity(0.30)
         }
     }
@@ -69,12 +70,12 @@ enum RecorderGlassStyle {
 
     static func divider(usesLiquidGlass: Bool, colorScheme: ColorScheme) -> Color {
         guard usesLiquidGlass else { return .white.opacity(0.15) }
-        return colorScheme == .dark ? .white.opacity(0.16) : .black.opacity(0.12)
+        return colorScheme == .dark ? .white.opacity(0.12) : .black.opacity(0.075)
     }
 
     static func contentShadow(usesLiquidGlass: Bool, colorScheme: ColorScheme) -> Color {
         guard usesLiquidGlass else { return .clear }
-        return colorScheme == .dark ? .black.opacity(0.46) : .white.opacity(0.74)
+        return colorScheme == .dark ? .black.opacity(0.48) : .white.opacity(0.58)
     }
 
     static func glassBackground(colorScheme: ColorScheme, reduceTransparency: Bool) -> LinearGradient {
@@ -91,14 +92,14 @@ enum RecorderGlassStyle {
         return LinearGradient(
             colors: colorScheme == .dark
                 ? [
-                    Color.white.opacity(0.18),
-                    Color.black.opacity(0.16),
-                    Color.black.opacity(0.36)
+                    Color.white.opacity(0.16),
+                    Color.black.opacity(0.12),
+                    Color.black.opacity(0.34)
                 ]
                 : [
-                    Color.white.opacity(0.60),
-                    Color.white.opacity(0.28),
-                    Color.black.opacity(0.06)
+                    Color.white.opacity(0.42),
+                    Color.white.opacity(0.16),
+                    Color.black.opacity(0.085)
                 ],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
@@ -109,14 +110,14 @@ enum RecorderGlassStyle {
         LinearGradient(
             colors: colorScheme == .dark
                 ? [
-                    Color.black.opacity(reduceTransparency ? 0.18 : 0.10),
-                    Color.black.opacity(reduceTransparency ? 0.26 : 0.18),
+                    Color.black.opacity(reduceTransparency ? 0.20 : 0.08),
+                    Color.black.opacity(reduceTransparency ? 0.30 : 0.20),
                     Color.white.opacity(0.04)
                 ]
                 : [
-                    Color.white.opacity(reduceTransparency ? 0.24 : 0.14),
+                    Color.white.opacity(reduceTransparency ? 0.18 : 0.08),
                     Color.clear,
-                    Color.black.opacity(reduceTransparency ? 0.08 : 0.05)
+                    Color.black.opacity(reduceTransparency ? 0.10 : 0.07)
                 ],
             startPoint: .top,
             endPoint: .bottomTrailing
@@ -127,14 +128,14 @@ enum RecorderGlassStyle {
         LinearGradient(
             colors: colorScheme == .dark
                 ? [
-                    Color.white.opacity(0.34),
+                    Color.white.opacity(0.38),
                     Color.white.opacity(0.11),
-                    Color.black.opacity(0.32)
+                    Color.black.opacity(0.36)
                 ]
                 : [
-                    Color.white.opacity(0.86),
-                    Color.white.opacity(0.24),
-                    Color.black.opacity(0.18)
+                    Color.white.opacity(0.78),
+                    Color.white.opacity(0.22),
+                    Color.black.opacity(0.24)
                 ],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
@@ -145,13 +146,13 @@ enum RecorderGlassStyle {
         LinearGradient(
             colors: colorScheme == .dark
                 ? [
-                    Color.white.opacity(0.18),
+                    Color.white.opacity(0.20),
                     Color.white.opacity(0.04),
                     Color.clear
                 ]
                 : [
-                    Color.white.opacity(0.46),
-                    Color.white.opacity(0.10),
+                    Color.white.opacity(0.38),
+                    Color.white.opacity(0.08),
                     Color.clear
                 ],
             startPoint: .topLeading,
@@ -160,7 +161,7 @@ enum RecorderGlassStyle {
     }
 
     static func outerShadow(colorScheme: ColorScheme) -> Color {
-        colorScheme == .dark ? .black.opacity(0.38) : .black.opacity(0.16)
+        colorScheme == .dark ? .black.opacity(0.46) : .black.opacity(0.22)
     }
 
     static func controlFill(isEnabled: Bool, isPressed: Bool, isHovering: Bool, colorScheme: ColorScheme) -> LinearGradient {
@@ -169,14 +170,14 @@ enum RecorderGlassStyle {
         return LinearGradient(
             colors: colorScheme == .dark
                 ? [
-                    Color.white.opacity(0.16 * activeBoost * pressBoost),
+                    Color.white.opacity(0.14 * activeBoost * pressBoost),
                     Color.white.opacity(0.07 * activeBoost),
                     Color.black.opacity(0.18)
                 ]
                 : [
-                    Color.white.opacity(0.54 * activeBoost * pressBoost),
-                    Color.white.opacity(0.18 * activeBoost),
-                    Color.black.opacity(0.045)
+                    Color.white.opacity(0.46 * activeBoost * pressBoost),
+                    Color.white.opacity(0.14 * activeBoost),
+                    Color.black.opacity(0.06)
                 ],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
@@ -191,7 +192,7 @@ enum RecorderGlassStyle {
     }
 
     static func selectionFill(colorScheme: ColorScheme) -> Color {
-        colorScheme == .dark ? Color.white.opacity(0.13) : Color.black.opacity(0.07)
+        colorScheme == .dark ? Color.white.opacity(0.12) : Color.black.opacity(0.055)
     }
 
     static func successContent(usesLiquidGlass: Bool, colorScheme: ColorScheme) -> Color {
@@ -224,7 +225,47 @@ struct RecorderGlassLegibilityLayer<S: Shape>: View {
             shape.stroke(RecorderGlassStyle.innerHighlight(colorScheme: colorScheme), lineWidth: 1.2)
             shape.stroke(RecorderGlassStyle.edgeHighlight(colorScheme: colorScheme), lineWidth: 0.75)
         }
-        .shadow(color: RecorderGlassStyle.outerShadow(colorScheme: colorScheme), radius: 18, x: 0, y: 8)
+        .clipShape(shape)
+    }
+}
+
+struct RecorderLiquidGlassSurface<S: Shape>: View {
+    let shape: S
+    let material: NSVisualEffectView.Material
+
+    init(shape: S, material: NSVisualEffectView.Material = .popover) {
+        self.shape = shape
+        self.material = material
+    }
+
+    var body: some View {
+        ZStack {
+            VisualEffectView(
+                material: material,
+                blendingMode: .behindWindow
+            )
+            .clipShape(shape)
+
+            RecorderGlassLegibilityLayer(shape: shape)
+        }
+        .clipShape(shape)
+        .compositingGroup()
+    }
+}
+
+struct RecorderGlassDivider: View {
+    @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.recorderUsesLiquidGlass) private var usesLiquidGlassDesign
+
+    var body: some View {
+        Rectangle()
+            .fill(
+                RecorderGlassStyle.divider(
+                    usesLiquidGlass: usesLiquidGlassDesign,
+                    colorScheme: colorScheme
+                )
+            )
+            .frame(height: 1)
     }
 }
 

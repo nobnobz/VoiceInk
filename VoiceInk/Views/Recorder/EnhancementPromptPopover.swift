@@ -28,13 +28,7 @@ struct EnhancementPromptPopover: View {
             .padding(.horizontal)
             .padding(.top, 8)
 
-            Divider()
-                .background(
-                    RecorderGlassStyle.divider(
-                        usesLiquidGlass: usesLiquidGlassDesign,
-                        colorScheme: colorScheme
-                    )
-                )
+            RecorderGlassDivider()
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 4) {
@@ -76,14 +70,7 @@ struct EnhancementPromptPopover: View {
     @ViewBuilder
     private var popoverBackground: some View {
         if usesLiquidGlassDesign {
-            ZStack {
-                VisualEffectView(
-                    material: .popover,
-                    blendingMode: .behindWindow,
-                    cornerRadius: 12
-                )
-                RecorderGlassLegibilityLayer(shape: popoverShape)
-            }
+            RecorderLiquidGlassSurface(shape: popoverShape)
         } else {
             Color.black
         }

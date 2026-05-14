@@ -29,7 +29,7 @@ class NotchRecorderPanel: KeyablePanel {
         self.backgroundColor = .clear
         self.isOpaque = false
         self.alphaValue = 1.0
-        self.hasShadow = usesLiquidGlassDesign
+        self.hasShadow = false
         self.isMovableByWindowBackground = false
         self.hidesOnDeactivate = false
         self.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary, .ignoresCycle]
