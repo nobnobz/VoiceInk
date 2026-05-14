@@ -34,7 +34,6 @@ extension EnvironmentValues {
 enum RecorderGlassStyle {
     enum SurfaceRole {
         case recorder
-        case externalRecorder
         case popover
     }
 
@@ -97,7 +96,6 @@ enum RecorderGlassStyle {
         if reduceTransparency {
             let opacity = switch role {
             case .recorder: 0.56
-            case .externalRecorder: 0.72
             case .popover: 0.66
             }
 
@@ -122,11 +120,6 @@ enum RecorderGlassStyle {
             centerSheen = 0.000
             lowerShade = 0.120
             rimShade = 0.260
-        case .externalRecorder:
-            topSheen = 0.030
-            centerSheen = 0.000
-            lowerShade = 0.260
-            rimShade = 0.460
         case .popover:
             topSheen = 0.155
             centerSheen = 0.052
@@ -158,9 +151,6 @@ enum RecorderGlassStyle {
         case .recorder:
             topShade = 0.040
             bottomShade = 0.240
-        case .externalRecorder:
-            topShade = 0.100
-            bottomShade = 0.340
         case .popover:
             topShade = 0.045
             bottomShade = 0.125
@@ -204,10 +194,6 @@ enum RecorderGlassStyle {
 
     static func outerShadow(colorScheme _: ColorScheme) -> Color {
         .black.opacity(0.42)
-    }
-
-    static func externalGlassMaterialOpacity(colorScheme: ColorScheme) -> Double {
-        colorScheme == .dark ? 0.72 : 0.64
     }
 
     static func controlFill(isEnabled: Bool, isPressed: Bool, isHovering: Bool, colorScheme _: ColorScheme) -> LinearGradient {

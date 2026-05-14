@@ -130,7 +130,17 @@ struct NotchRecorderView<S: RecorderStateProvider & ObservableObject>: View {
     @ViewBuilder
     private var pillBackground: some View {
         if useLiquidGlassDesign {
-            RecorderLiquidGlassSurface(shape: pillShape, role: .externalRecorder)
+            ZStack {
+                VisualEffectView(material: .hudWindow, blendingMode: .behindWindow)
+
+                GlassEffectContainer {
+                    Color.clear
+                        .glassEffect(.clear, in: pillShape)
+                }
+
+                pillShape
+                    .stroke(RecorderGlassStyle.edgeHighlight(colorScheme: colorScheme), lineWidth: 0.75)
+            }
         } else {
             Color.black
         }
