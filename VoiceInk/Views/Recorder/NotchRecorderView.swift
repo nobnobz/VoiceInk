@@ -5,6 +5,7 @@ struct NotchRecorderView<S: RecorderStateProvider & ObservableObject>: View {
     @ObservedObject var recorder: Recorder
     @EnvironmentObject var windowManager: NotchWindowManager
     @EnvironmentObject private var enhancementService: AIEnhancementService
+    @Environment(\.colorScheme) private var colorScheme
     @AppStorage("showLiveTextPreview") private var showLiveTextPreview = false
     @AppStorage("UseLiquidGlassDesign") private var useLiquidGlassDesign = true
     @ObservedObject private var powerModeManager = PowerModeManager.shared
@@ -113,6 +114,7 @@ struct NotchRecorderView<S: RecorderStateProvider & ObservableObject>: View {
             liveTextPanel
         }
         .frame(width: pillWidth, height: pillHeight)
+        .environment(\.recorderUsesLiquidGlass, useLiquidGlassDesign)
         .background { pillBackground }
         .clipShape(pillShape)
     }
@@ -129,6 +131,8 @@ struct NotchRecorderView<S: RecorderStateProvider & ObservableObject>: View {
                             .glassEffect(.clear, in: pillShape)
                     }
                 }
+
+                RecorderGlassLegibilityLayer(shape: pillShape)
             }
         } else {
             Color.black
@@ -180,7 +184,12 @@ struct NotchRecorderView<S: RecorderStateProvider & ObservableObject>: View {
     private var liveTextPanel: some View {
         VStack(spacing: 0) {
             if displayState == .liveText {
-                Divider().background(Color.white.opacity(0.15))
+                Divider().background(
+                    RecorderGlassStyle.divider(
+                        usesLiquidGlass: useLiquidGlassDesign,
+                        colorScheme: colorScheme
+                    )
+                )
                 LiveTranscriptView(text: stateProvider.partialTranscript)
                     .padding(.horizontal, 8)
             }

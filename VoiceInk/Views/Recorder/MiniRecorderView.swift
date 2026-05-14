@@ -8,6 +8,7 @@ struct MiniRecorderView<S: RecorderStateProvider & ObservableObject>: View {
     let usesExternalGlass: Bool
     @EnvironmentObject var windowManager: MiniWindowManager
     @EnvironmentObject private var enhancementService: AIEnhancementService
+    @Environment(\.colorScheme) private var colorScheme
     @AppStorage("showLiveTextPreview") private var showLiveTextPreview = false
 
     @State private var activePopover: ActivePopoverState = .none
@@ -87,7 +88,12 @@ struct MiniRecorderView<S: RecorderStateProvider & ObservableObject>: View {
         VStack(spacing: 0) {
             if hasLiveTranscript {
                 LiveTranscriptView(text: stateProvider.partialTranscript)
-                Divider().background(Color.white.opacity(0.15))
+                Divider().background(
+                    RecorderGlassStyle.divider(
+                        usesLiquidGlass: usesLiquidGlassDesign,
+                        colorScheme: colorScheme
+                    )
+                )
             }
         }
     }
@@ -109,23 +115,28 @@ struct MiniRecorderView<S: RecorderStateProvider & ObservableObject>: View {
             controlBar
         }
         .frame(width: pillWidth, height: pillHeight)
+        .environment(\.recorderUsesLiquidGlass, usesLiquidGlassDesign)
     }
 
     @ViewBuilder
     private var pill: some View {
         if usesExternalGlass {
             pillContent
+                .background {
+                    RecorderGlassLegibilityLayer(shape: pillShape)
+                }
+                .clipShape(pillShape)
         } else if usesLiquidGlassDesign {
             pillContent
                 .background {
-                    VisualEffectView(
-                        material: .hudWindow,
-                        blendingMode: .behindWindow,
-                        cornerRadius: pillCornerRadius,
-                        appearanceName: .darkAqua,
-                        borderWidth: 0.35,
-                        borderColor: NSColor.white.withAlphaComponent(0.18)
-                    )
+                    ZStack {
+                        VisualEffectView(
+                            material: .hudWindow,
+                            blendingMode: .behindWindow,
+                            cornerRadius: pillCornerRadius
+                        )
+                        RecorderGlassLegibilityLayer(shape: pillShape)
+                    }
                 }
                 .clipShape(pillShape)
         } else {

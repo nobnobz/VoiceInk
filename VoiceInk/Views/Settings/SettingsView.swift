@@ -202,11 +202,19 @@ struct SettingsView: View {
                 }
                 .pickerStyle(.segmented)
 
-                Picker("Recorder Appearance", selection: $useLiquidGlassDesign) {
-                    Text("Liquid Glass").tag(true)
-                    Text("Classic").tag(false)
+                HStack {
+                    Text("Recorder Appearance")
+                    Spacer()
+                    Picker("", selection: $useLiquidGlassDesign) {
+                        Text("Liquid Glass").tag(true)
+                        Text("Classic").tag(false)
+                    }
+                    .labelsHidden()
+                    .pickerStyle(.segmented)
+                    .controlSize(.small)
+                    .frame(width: 220)
+                    .accessibilityLabel("Recorder Appearance")
                 }
-                .pickerStyle(.segmented)
                 .onChange(of: useLiquidGlassDesign) { _, _ in
                     recorderUIManager.refreshRecorderPanel()
                 }

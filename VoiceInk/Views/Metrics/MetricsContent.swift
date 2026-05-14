@@ -12,6 +12,8 @@ struct MetricsContent: View {
     @State private var isLoadingMetrics: Bool = true
     @State private var metricsTask: Task<Void, Never>?
     @State private var isModelStatsPanelPresented = false
+    @State private var isResetConfirmationPresented = false
+    @State private var isResettingDashboard = false
 
     var body: some View {
         Group {
@@ -81,6 +83,14 @@ struct MetricsContent: View {
             }
         }
         .animation(.smooth(duration: 0.3), value: isModelStatsPanelPresented)
+        .alert("Reset Dashboard?", isPresented: $isResetConfirmationPresented) {
+            Button("Cancel", role: .cancel) {}
+            Button("Reset", role: .destructive) {
+                resetDashboardMetrics()
+            }
+        } message: {
+            Text("This clears the saved dashboard metrics and starts the dashboard from zero. Your transcription history stays untouched.")
+        }
     }
     
     private func loadMetricsEfficiently() async {
@@ -243,6 +253,13 @@ struct MetricsContent: View {
 
     private var footerActionsView: some View {
         HStack(spacing: 12) {
+            ResetDashboardButton(
+                isDisabled: totalCount == 0 || isResettingDashboard,
+                isResetting: isResettingDashboard
+            ) {
+                isResetConfirmationPresented = true
+            }
+
             Button(action: {
                 withAnimation(.smooth(duration: 0.3)) { isModelStatsPanelPresented = true }
             }) {
@@ -259,6 +276,35 @@ struct MetricsContent: View {
             .help("View transcription and enhancement model performance")
             CopySystemInfoButton()
         }
+    }
+
+    @MainActor
+    private func resetDashboardMetrics() {
+        guard !isResettingDashboard else { return }
+
+        metricsTask?.cancel()
+        isResettingDashboard = true
+
+        do {
+            let metrics = try modelContext.fetch(FetchDescriptor<SessionMetric>())
+            for metric in metrics {
+                modelContext.delete(metric)
+            }
+            try modelContext.save()
+
+            withAnimation(.smooth(duration: 0.25)) {
+                totalCount = 0
+                totalWords = 0
+                totalDuration = 0
+                isLoadingMetrics = false
+            }
+
+            NotificationCenter.default.post(name: .sessionMetricsDidChange, object: nil)
+        } catch {
+            logger.error("Error resetting dashboard metrics: \(error.localizedDescription, privacy: .public)")
+        }
+
+        isResettingDashboard = false
     }
     
     private var formattedTimeSaved: String {
@@ -374,5 +420,35 @@ private struct CopySystemInfoButton: View {
                 isCopied = false
             }
         }
+    }
+}
+
+private struct ResetDashboardButton: View {
+    let isDisabled: Bool
+    let isResetting: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 8) {
+                if isResetting {
+                    ProgressView()
+                        .controlSize(.small)
+                        .frame(width: 14, height: 14)
+                } else {
+                    Image(systemName: "arrow.counterclockwise")
+                }
+
+                Text(isResetting ? "Resetting..." : "Reset Dashboard")
+            }
+            .font(.system(size: 13, weight: .medium))
+            .foregroundStyle(isDisabled ? Color.secondary : Color.red)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(Capsule().fill(.thinMaterial))
+        }
+        .buttonStyle(.plain)
+        .disabled(isDisabled)
+        .help("Reset dashboard metrics to zero")
     }
 }

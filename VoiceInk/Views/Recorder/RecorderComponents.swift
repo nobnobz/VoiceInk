@@ -8,6 +8,129 @@ enum ActivePopoverState {
     case power
 }
 
+// MARK: - Recorder Visual Style
+
+private struct RecorderUsesLiquidGlassKey: EnvironmentKey {
+    static let defaultValue = false
+}
+
+extension EnvironmentValues {
+    var recorderUsesLiquidGlass: Bool {
+        get { self[RecorderUsesLiquidGlassKey.self] }
+        set { self[RecorderUsesLiquidGlassKey.self] = newValue }
+    }
+}
+
+enum RecorderGlassStyle {
+    static func primaryContent(usesLiquidGlass: Bool, colorScheme: ColorScheme) -> Color {
+        guard usesLiquidGlass else { return .white }
+        return colorScheme == .dark ? .white.opacity(0.94) : .black.opacity(0.78)
+    }
+
+    static func secondaryContent(usesLiquidGlass: Bool, colorScheme: ColorScheme) -> Color {
+        guard usesLiquidGlass else { return .white.opacity(0.6) }
+        return colorScheme == .dark ? .white.opacity(0.68) : .black.opacity(0.56)
+    }
+
+    static func disabledContent(usesLiquidGlass: Bool, colorScheme: ColorScheme) -> Color {
+        guard usesLiquidGlass else { return .white.opacity(0.3) }
+        return colorScheme == .dark ? .white.opacity(0.34) : .black.opacity(0.30)
+    }
+
+    static func divider(usesLiquidGlass: Bool, colorScheme: ColorScheme) -> Color {
+        guard usesLiquidGlass else { return .white.opacity(0.15) }
+        return colorScheme == .dark ? .white.opacity(0.14) : .black.opacity(0.10)
+    }
+
+    static func contentShadow(usesLiquidGlass: Bool, colorScheme: ColorScheme) -> Color {
+        guard usesLiquidGlass else { return .clear }
+        return colorScheme == .dark ? .black.opacity(0.35) : .white.opacity(0.60)
+    }
+
+    static func glassFill(colorScheme: ColorScheme, reduceTransparency: Bool) -> LinearGradient {
+        if reduceTransparency {
+            return LinearGradient(
+                colors: colorScheme == .dark
+                    ? [Color.black.opacity(0.78), Color.black.opacity(0.70)]
+                    : [Color.white.opacity(0.92), Color.white.opacity(0.84)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        }
+
+        return LinearGradient(
+            colors: colorScheme == .dark
+                ? [
+                    Color.white.opacity(0.10),
+                    Color.black.opacity(0.24),
+                    Color.black.opacity(0.40)
+                ]
+                : [
+                    Color.white.opacity(0.54),
+                    Color.white.opacity(0.34),
+                    Color.black.opacity(0.08)
+                ],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+    }
+
+    static func glassSheen(colorScheme: ColorScheme) -> LinearGradient {
+        LinearGradient(
+            colors: colorScheme == .dark
+                ? [
+                    Color.white.opacity(0.13),
+                    Color.white.opacity(0.03),
+                    Color.clear
+                ]
+                : [
+                    Color.white.opacity(0.38),
+                    Color.white.opacity(0.10),
+                    Color.clear
+                ],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+    }
+
+    static func glassStroke(colorScheme: ColorScheme) -> LinearGradient {
+        LinearGradient(
+            colors: colorScheme == .dark
+                ? [
+                    Color.white.opacity(0.28),
+                    Color.white.opacity(0.08),
+                    Color.black.opacity(0.26)
+                ]
+                : [
+                    Color.white.opacity(0.72),
+                    Color.white.opacity(0.20),
+                    Color.black.opacity(0.18)
+                ],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+    }
+}
+
+struct RecorderGlassLegibilityLayer<S: Shape>: View {
+    let shape: S
+    @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+
+    var body: some View {
+        ZStack {
+            shape.fill(
+                RecorderGlassStyle.glassFill(
+                    colorScheme: colorScheme,
+                    reduceTransparency: reduceTransparency
+                )
+            )
+            shape.fill(RecorderGlassStyle.glassSheen(colorScheme: colorScheme))
+            shape.stroke(RecorderGlassStyle.glassStroke(colorScheme: colorScheme), lineWidth: 0.7)
+        }
+    }
+}
+
 // MARK: - Icon Toggle Button
 
 struct RecorderToggleButton: View {
@@ -15,6 +138,8 @@ struct RecorderToggleButton: View {
     let icon: String
     let disabled: Bool
     let action: () -> Void
+    @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.recorderUsesLiquidGlass) private var usesLiquidGlassDesign
 
     init(isEnabled: Bool, icon: String, disabled: Bool = false, action: @escaping () -> Void) {
         self.isEnabled = isEnabled
@@ -36,10 +161,38 @@ struct RecorderToggleButton: View {
                     Image(systemName: icon).font(.system(size: 13))
                 }
             }
-            .foregroundColor(disabled ? .white.opacity(0.3) : (isEnabled ? .white : .white.opacity(0.6)))
+            .foregroundColor(iconColor)
+            .shadow(
+                color: RecorderGlassStyle.contentShadow(
+                    usesLiquidGlass: usesLiquidGlassDesign,
+                    colorScheme: colorScheme
+                ),
+                radius: usesLiquidGlassDesign ? 0.8 : 0,
+                x: 0,
+                y: 0.5
+            )
         }
         .buttonStyle(PlainButtonStyle())
         .disabled(disabled)
+    }
+
+    private var iconColor: Color {
+        if disabled {
+            return RecorderGlassStyle.disabledContent(
+                usesLiquidGlass: usesLiquidGlassDesign,
+                colorScheme: colorScheme
+            )
+        }
+
+        return isEnabled
+            ? RecorderGlassStyle.primaryContent(
+                usesLiquidGlass: usesLiquidGlassDesign,
+                colorScheme: colorScheme
+            )
+            : RecorderGlassStyle.secondaryContent(
+                usesLiquidGlass: usesLiquidGlassDesign,
+                colorScheme: colorScheme
+            )
     }
 }
 
@@ -267,13 +420,29 @@ struct RecorderPowerModeButton: View {
 
 struct LiveTranscriptView: View {
     let text: String
+    @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.recorderUsesLiquidGlass) private var usesLiquidGlassDesign
 
     var body: some View {
         ScrollViewReader { proxy in
             ScrollView(.vertical, showsIndicators: false) {
                 Text(text)
                     .font(.system(size: 12))
-                    .foregroundColor(.white.opacity(0.8))
+                    .foregroundColor(
+                        RecorderGlassStyle.primaryContent(
+                            usesLiquidGlass: usesLiquidGlassDesign,
+                            colorScheme: colorScheme
+                        ).opacity(usesLiquidGlassDesign ? 0.88 : 0.8)
+                    )
+                    .shadow(
+                        color: RecorderGlassStyle.contentShadow(
+                            usesLiquidGlass: usesLiquidGlassDesign,
+                            colorScheme: colorScheme
+                        ),
+                        radius: usesLiquidGlassDesign ? 0.8 : 0,
+                        x: 0,
+                        y: 0.5
+                    )
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 6)
@@ -305,6 +474,8 @@ struct RecorderStatusDisplay: View {
     let currentState: RecordingState
     let audioMeter: AudioMeter
     let menuBarHeight: CGFloat?
+    @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.recorderUsesLiquidGlass) private var usesLiquidGlassDesign
 
     init(currentState: RecordingState, audioMeter: AudioMeter, menuBarHeight: CGFloat? = nil) {
         self.currentState = currentState
@@ -315,19 +486,35 @@ struct RecorderStatusDisplay: View {
     var body: some View {
         Group {
             if currentState == .enhancing {
-                ProcessingStatusDisplay(mode: .enhancing, color: .white).transition(.opacity)
+                ProcessingStatusDisplay(mode: .enhancing, color: statusColor).transition(.opacity)
             } else if currentState == .transcribing {
-                ProcessingStatusDisplay(mode: .transcribing, color: .white).transition(.opacity)
+                ProcessingStatusDisplay(mode: .transcribing, color: statusColor).transition(.opacity)
             } else if currentState == .recording {
-                AudioVisualizer(audioMeter: audioMeter, color: .white, isActive: true)
+                AudioVisualizer(audioMeter: audioMeter, color: statusColor, isActive: true)
                     .scaleEffect(y: menuBarHeight != nil ? min(1.0, (menuBarHeight! - 8) / 25) : 1.0, anchor: .center)
                     .transition(.opacity)
             } else {
-                StaticVisualizer(color: .white)
+                StaticVisualizer(color: statusColor)
                     .scaleEffect(y: menuBarHeight != nil ? min(1.0, (menuBarHeight! - 8) / 25) : 1.0, anchor: .center)
                     .transition(.opacity)
             }
         }
+        .shadow(
+            color: RecorderGlassStyle.contentShadow(
+                usesLiquidGlass: usesLiquidGlassDesign,
+                colorScheme: colorScheme
+            ),
+            radius: usesLiquidGlassDesign ? 0.9 : 0,
+            x: 0,
+            y: 0.5
+        )
         .animation(.easeInOut(duration: 0.2), value: currentState)
+    }
+
+    private var statusColor: Color {
+        RecorderGlassStyle.primaryContent(
+            usesLiquidGlass: usesLiquidGlassDesign,
+            colorScheme: colorScheme
+        )
     }
 }

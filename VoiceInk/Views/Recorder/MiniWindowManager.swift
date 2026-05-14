@@ -82,6 +82,7 @@ class MiniWindowManager: ObservableObject {
         let hostingController = NSHostingController(rootView: view)
 
         if #available(macOS 26.0, *), UserDefaults.standard.bool(forKey: "UseLiquidGlassDesign") {
+            newPanel.hasShadow = true
             newPanel.contentView = makeGlassHost(
                 contentView: hostingController.view,
                 cornerRadius: contentSize.height / 2
@@ -125,6 +126,10 @@ class MiniWindowManager: ObservableObject {
         let rootView = NSView()
         rootView.wantsLayer = true
         rootView.layer?.backgroundColor = NSColor.clear.cgColor
+        rootView.layer?.shadowColor = NSColor.black.withAlphaComponent(0.28).cgColor
+        rootView.layer?.shadowOpacity = 1
+        rootView.layer?.shadowRadius = 16
+        rootView.layer?.shadowOffset = NSSize(width: 0, height: -5)
 
         let compositorAwakener = NSVisualEffectView()
         compositorAwakener.material = .underWindowBackground
@@ -140,8 +145,8 @@ class MiniWindowManager: ObservableObject {
         let glassView = NSGlassEffectView()
         glassView.style = .clear
         glassView.cornerRadius = cornerRadius
-        glassView.tintColor = nil
-        glassView.appearance = NSAppearance(named: .darkAqua)
+        glassView.tintColor = NSColor.controlBackgroundColor.withAlphaComponent(0.06)
+        glassView.appearance = nil
         glassView.translatesAutoresizingMaskIntoConstraints = false
 
         let edgeHighlightView = PillEdgeHighlightView(cornerRadius: cornerRadius)
@@ -240,6 +245,12 @@ private final class PillEdgeHighlightView: NSView {
         CATransaction.commit()
     }
 
+    override func viewDidChangeEffectiveAppearance() {
+        super.viewDidChangeEffectiveAppearance()
+        configureTopLeftHighlight()
+        configureBottomRightHighlight()
+    }
+
     private func setupLayers() {
         wantsLayer = true
         layer?.backgroundColor = NSColor.clear.cgColor
@@ -259,24 +270,44 @@ private final class PillEdgeHighlightView: NSView {
         topLeftHighlight.startPoint = CGPoint(x: 0, y: 0)
         topLeftHighlight.endPoint = CGPoint(x: 1, y: 1)
         topLeftHighlight.locations = [0, 0.28, 0.58, 1]
-        topLeftHighlight.colors = [
-            NSColor.white.withAlphaComponent(0.30).cgColor,
-            NSColor.white.withAlphaComponent(0.13).cgColor,
-            NSColor.white.withAlphaComponent(0.03).cgColor,
-            NSColor.white.withAlphaComponent(0).cgColor
-        ]
+        let colors: [NSColor] = isDarkAppearance
+            ? [
+                NSColor.white.withAlphaComponent(0.34),
+                NSColor.white.withAlphaComponent(0.14),
+                NSColor.white.withAlphaComponent(0.03),
+                NSColor.white.withAlphaComponent(0)
+            ]
+            : [
+                NSColor.white.withAlphaComponent(0.58),
+                NSColor.white.withAlphaComponent(0.22),
+                NSColor.white.withAlphaComponent(0.05),
+                NSColor.white.withAlphaComponent(0)
+            ]
+        topLeftHighlight.colors = colors.map(\.cgColor)
     }
 
     private func configureBottomRightHighlight() {
         bottomRightHighlight.startPoint = CGPoint(x: 1, y: 1)
         bottomRightHighlight.endPoint = CGPoint(x: 0, y: 0)
         bottomRightHighlight.locations = [0, 0.26, 0.56, 1]
-        bottomRightHighlight.colors = [
-            NSColor.white.withAlphaComponent(0.22).cgColor,
-            NSColor.white.withAlphaComponent(0.09).cgColor,
-            NSColor.white.withAlphaComponent(0.02).cgColor,
-            NSColor.white.withAlphaComponent(0).cgColor
-        ]
+        let colors: [NSColor] = isDarkAppearance
+            ? [
+                NSColor.black.withAlphaComponent(0.30),
+                NSColor.black.withAlphaComponent(0.13),
+                NSColor.black.withAlphaComponent(0.03),
+                NSColor.black.withAlphaComponent(0)
+            ]
+            : [
+                NSColor.black.withAlphaComponent(0.22),
+                NSColor.black.withAlphaComponent(0.08),
+                NSColor.black.withAlphaComponent(0.02),
+                NSColor.black.withAlphaComponent(0)
+            ]
+        bottomRightHighlight.colors = colors.map(\.cgColor)
+    }
+
+    private var isDarkAppearance: Bool {
+        effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
     }
 
     private func configure(mask: CAShapeLayer, with path: CGPath) {
