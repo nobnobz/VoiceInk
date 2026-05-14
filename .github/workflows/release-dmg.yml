@@ -77,10 +77,11 @@ jobs:
           signing_identity="${SIGNING_CERTIFICATE_NAME:-VoiceInk Local Signing}"
           certificate_pem="${RUNNER_TEMP}/voiceink-local-signing.cer"
           security find-certificate -c "${signing_identity}" -p "${keychain_path}" > "${certificate_pem}"
-          security add-trusted-cert \
+          sudo security add-trusted-cert \
+            -d \
             -r trustRoot \
             -p codeSign \
-            -k "${keychain_path}" \
+            -k /Library/Keychains/System.keychain \
             "${certificate_pem}"
           security set-key-partition-list \
             -S apple-tool:,apple:,codesign: \
