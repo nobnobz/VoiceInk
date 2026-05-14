@@ -88,6 +88,51 @@ enum RecorderGlassStyle {
         return .black.opacity(0.90)
     }
 
+    static func nativeGlassDepth(colorScheme _: ColorScheme, role: SurfaceRole) -> LinearGradient {
+        let topSheen: Double
+        let midShade: Double
+        let lowerShade: Double
+        let rimShade: Double
+
+        switch role {
+        case .recorder:
+            topSheen = 0.10
+            midShade = 0.05
+            lowerShade = 0.16
+            rimShade = 0.30
+        case .popover:
+            topSheen = 0.14
+            midShade = 0.08
+            lowerShade = 0.18
+            rimShade = 0.28
+        }
+
+        return LinearGradient(
+            colors: [
+                Color.white.opacity(topSheen),
+                Color.black.opacity(midShade),
+                Color.black.opacity(lowerShade),
+                Color.black.opacity(rimShade)
+            ],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+    }
+
+    static func nativeGlassCaustic(colorScheme _: ColorScheme, role: SurfaceRole) -> RadialGradient {
+        let opacity: Double = role == .recorder ? 0.10 : 0.08
+        return RadialGradient(
+            colors: [
+                Color.white.opacity(opacity),
+                Color.white.opacity(0.025),
+                Color.clear
+            ],
+            center: UnitPoint(x: 0.34, y: 0.20),
+            startRadius: 0,
+            endRadius: role == .recorder ? 118 : 170
+        )
+    }
+
     static func glassBackground(
         colorScheme _: ColorScheme,
         reduceTransparency: Bool,
@@ -116,10 +161,10 @@ enum RecorderGlassStyle {
 
         switch role {
         case .recorder:
-            topSheen = 0.040
-            centerSheen = 0.000
-            lowerShade = 0.120
-            rimShade = 0.260
+            topSheen = 0.070
+            centerSheen = 0.012
+            lowerShade = 0.170
+            rimShade = 0.320
         case .popover:
             topSheen = 0.155
             centerSheen = 0.052
@@ -149,8 +194,8 @@ enum RecorderGlassStyle {
 
         switch role {
         case .recorder:
-            topShade = 0.040
-            bottomShade = 0.240
+            topShade = 0.020
+            bottomShade = 0.300
         case .popover:
             topShade = 0.045
             bottomShade = 0.125
@@ -201,9 +246,9 @@ enum RecorderGlassStyle {
         let pressBoost = isPressed ? 1.22 : (isHovering ? 1.10 : 1.0)
         return LinearGradient(
             colors: [
-                Color.white.opacity(0.28 * activeBoost * pressBoost),
-                Color.white.opacity(0.11 * activeBoost),
-                Color.black.opacity(0.08)
+                Color.white.opacity(0.34 * activeBoost * pressBoost),
+                Color.white.opacity(0.13 * activeBoost),
+                Color.black.opacity(0.18)
             ],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
@@ -233,6 +278,18 @@ struct RecorderGlassLegibilityLayer<S: Shape>: View {
 
     var body: some View {
         ZStack {
+            shape.fill(
+                RecorderGlassStyle.nativeGlassDepth(
+                    colorScheme: colorScheme,
+                    role: role
+                )
+            )
+            shape.fill(
+                RecorderGlassStyle.nativeGlassCaustic(
+                    colorScheme: colorScheme,
+                    role: role
+                )
+            )
             shape.fill(
                 RecorderGlassStyle.glassBackground(
                     colorScheme: colorScheme,
@@ -358,11 +415,13 @@ struct RecorderToggleButton: View {
 
     @ViewBuilder
     private var buttonBackground: some View {
-        if usesLiquidGlassDesign && !usesExternalGlass {
+        if usesLiquidGlassDesign {
             ZStack {
-                GlassEffectContainer {
-                    Color.clear
-                        .glassEffect(.clear.interactive(), in: Circle())
+                if !usesExternalGlass {
+                    GlassEffectContainer {
+                        Color.clear
+                            .glassEffect(.clear.interactive(), in: Circle())
+                    }
                 }
 
                 Circle()

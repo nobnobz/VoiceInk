@@ -7,6 +7,7 @@ class MiniWindowManager: ObservableObject {
     private var windowController: NSWindowController?
     private var panel: MiniRecorderPanel?
     private weak var glassView: NSGlassEffectView?
+    private weak var depthView: PillGlassDepthView?
     private weak var edgeHighlightView: PillEdgeHighlightView?
     private var contentSize = NSSize(width: 184, height: 40)
 
@@ -98,6 +99,7 @@ class MiniWindowManager: ObservableObject {
         windowController = nil
         panel = nil
         glassView = nil
+        depthView = nil
         edgeHighlightView = nil
     }
 
@@ -113,6 +115,7 @@ class MiniWindowManager: ObservableObject {
         }
 
         glassView?.cornerRadius = cornerRadius
+        depthView?.cornerRadius = cornerRadius
         edgeHighlightView?.cornerRadius = cornerRadius
     }
 
@@ -140,6 +143,14 @@ class MiniWindowManager: ObservableObject {
         glassView.appearance = NSAppearance(named: .darkAqua)
         glassView.translatesAutoresizingMaskIntoConstraints = false
 
+        let glassContentView = NSView()
+        glassContentView.translatesAutoresizingMaskIntoConstraints = false
+        glassContentView.wantsLayer = true
+        glassContentView.layer?.backgroundColor = NSColor.clear.cgColor
+
+        let depthView = PillGlassDepthView(cornerRadius: cornerRadius)
+        depthView.translatesAutoresizingMaskIntoConstraints = false
+
         let edgeHighlightView = PillEdgeHighlightView(cornerRadius: cornerRadius)
         edgeHighlightView.translatesAutoresizingMaskIntoConstraints = false
 
@@ -150,7 +161,9 @@ class MiniWindowManager: ObservableObject {
         rootView.addSubview(compositorAwakener)
         rootView.addSubview(glassView)
         rootView.addSubview(edgeHighlightView)
-        glassView.contentView = contentView
+        glassView.contentView = glassContentView
+        glassContentView.addSubview(depthView)
+        glassContentView.addSubview(contentView)
 
         NSLayoutConstraint.activate([
             compositorAwakener.leadingAnchor.constraint(equalTo: rootView.leadingAnchor),
@@ -163,20 +176,123 @@ class MiniWindowManager: ObservableObject {
             glassView.topAnchor.constraint(equalTo: rootView.topAnchor),
             glassView.bottomAnchor.constraint(equalTo: rootView.bottomAnchor),
 
+            glassContentView.leadingAnchor.constraint(equalTo: glassView.leadingAnchor),
+            glassContentView.trailingAnchor.constraint(equalTo: glassView.trailingAnchor),
+            glassContentView.topAnchor.constraint(equalTo: glassView.topAnchor),
+            glassContentView.bottomAnchor.constraint(equalTo: glassView.bottomAnchor),
+
+            depthView.leadingAnchor.constraint(equalTo: glassContentView.leadingAnchor),
+            depthView.trailingAnchor.constraint(equalTo: glassContentView.trailingAnchor),
+            depthView.topAnchor.constraint(equalTo: glassContentView.topAnchor),
+            depthView.bottomAnchor.constraint(equalTo: glassContentView.bottomAnchor),
+
             edgeHighlightView.leadingAnchor.constraint(equalTo: rootView.leadingAnchor),
             edgeHighlightView.trailingAnchor.constraint(equalTo: rootView.trailingAnchor),
             edgeHighlightView.topAnchor.constraint(equalTo: rootView.topAnchor),
             edgeHighlightView.bottomAnchor.constraint(equalTo: rootView.bottomAnchor),
 
-            contentView.leadingAnchor.constraint(equalTo: glassView.leadingAnchor),
-            contentView.trailingAnchor.constraint(equalTo: glassView.trailingAnchor),
-            contentView.topAnchor.constraint(equalTo: glassView.topAnchor),
-            contentView.bottomAnchor.constraint(equalTo: glassView.bottomAnchor)
+            contentView.leadingAnchor.constraint(equalTo: glassContentView.leadingAnchor),
+            contentView.trailingAnchor.constraint(equalTo: glassContentView.trailingAnchor),
+            contentView.topAnchor.constraint(equalTo: glassContentView.topAnchor),
+            contentView.bottomAnchor.constraint(equalTo: glassContentView.bottomAnchor)
         ])
 
         self.glassView = glassView
+        self.depthView = depthView
         self.edgeHighlightView = edgeHighlightView
         return rootView
+    }
+}
+
+private final class PillGlassDepthView: NSView {
+    var cornerRadius: CGFloat {
+        didSet {
+            needsLayout = true
+        }
+    }
+
+    private let depthLayer = CAGradientLayer()
+    private let causticLayer = CAGradientLayer()
+    private let depthMask = CAShapeLayer()
+    private let causticMask = CAShapeLayer()
+
+    init(cornerRadius: CGFloat) {
+        self.cornerRadius = cornerRadius
+        super.init(frame: .zero)
+        setupLayers()
+    }
+
+    required init?(coder: NSCoder) {
+        cornerRadius = 20
+        super.init(coder: coder)
+        setupLayers()
+    }
+
+    override var isFlipped: Bool { true }
+
+    override func hitTest(_ point: NSPoint) -> NSView? {
+        nil
+    }
+
+    override func layout() {
+        super.layout()
+
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+
+        depthLayer.frame = bounds
+        causticLayer.frame = bounds
+
+        let pathBounds = bounds.insetBy(dx: 0.4, dy: 0.4)
+        let radius = max(0, cornerRadius - 0.4)
+        let path = CGPath(
+            roundedRect: pathBounds,
+            cornerWidth: radius,
+            cornerHeight: radius,
+            transform: nil
+        )
+
+        configure(mask: depthMask, with: path)
+        configure(mask: causticMask, with: path)
+
+        CATransaction.commit()
+    }
+
+    private func setupLayers() {
+        wantsLayer = true
+        layer?.backgroundColor = NSColor.clear.cgColor
+        layer?.masksToBounds = false
+
+        depthLayer.startPoint = CGPoint(x: 0, y: 0)
+        depthLayer.endPoint = CGPoint(x: 1, y: 1)
+        depthLayer.locations = [0, 0.38, 0.72, 1]
+        depthLayer.colors = [
+            NSColor.white.withAlphaComponent(0.10).cgColor,
+            NSColor.black.withAlphaComponent(0.04).cgColor,
+            NSColor.black.withAlphaComponent(0.16).cgColor,
+            NSColor.black.withAlphaComponent(0.30).cgColor
+        ]
+
+        causticLayer.type = .radial
+        causticLayer.startPoint = CGPoint(x: 0.36, y: 0.20)
+        causticLayer.endPoint = CGPoint(x: 0.92, y: 0.92)
+        causticLayer.locations = [0, 0.42, 1]
+        causticLayer.colors = [
+            NSColor.white.withAlphaComponent(0.11).cgColor,
+            NSColor.white.withAlphaComponent(0.025).cgColor,
+            NSColor.white.withAlphaComponent(0).cgColor
+        ]
+
+        depthLayer.mask = depthMask
+        causticLayer.mask = causticMask
+        layer?.addSublayer(depthLayer)
+        layer?.addSublayer(causticLayer)
+    }
+
+    private func configure(mask: CAShapeLayer, with path: CGPath) {
+        mask.frame = bounds
+        mask.path = path
+        mask.fillColor = NSColor.white.cgColor
     }
 }
 
