@@ -202,18 +202,11 @@ struct SettingsView: View {
                 }
                 .pickerStyle(.segmented)
 
-                Picker("Recorder Appearance", selection: $useLiquidGlassDesign) {
-                    Text("Classic").tag(false)
-                    Text("Liquid Glass").tag(true)
-                }
-                .pickerStyle(.segmented)
-                .controlSize(.small)
-                .frame(minWidth: 190, idealWidth: 220, maxWidth: 280, alignment: .leading)
-                .accessibilityHint("Switches the recorder appearance between Classic and Liquid Glass.")
-                .fixedSize(horizontal: false, vertical: true)
-                .onChange(of: useLiquidGlassDesign) { _, _ in
-                    recorderUIManager.refreshRecorderPanel()
-                }
+                Toggle("Liquid Glass", isOn: $useLiquidGlassDesign)
+                    .accessibilityHint("Switches the recorder appearance between Liquid Glass and Classic.")
+                    .onChange(of: useLiquidGlassDesign) { _, _ in
+                        recorderUIManager.refreshRecorderPanel()
+                    }
             }
 
             // MARK: - Experimental
