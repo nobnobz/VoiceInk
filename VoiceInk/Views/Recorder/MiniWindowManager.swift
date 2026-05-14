@@ -123,9 +123,9 @@ class MiniWindowManager: ObservableObject {
         rootView.layer?.masksToBounds = false
 
         let glassView = NSGlassEffectView()
-        glassView.style = .clear
+        glassView.style = .regular
         glassView.cornerRadius = cornerRadius
-        glassView.tintColor = NSColor.black.withAlphaComponent(0.08)
+        glassView.tintColor = nil
         glassView.appearance = nil
         glassView.translatesAutoresizingMaskIntoConstraints = false
 

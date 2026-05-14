@@ -70,7 +70,7 @@ struct EnhancementPromptPopover: View {
     @ViewBuilder
     private var popoverBackground: some View {
         if usesLiquidGlassDesign {
-            RecorderLiquidGlassSurface(shape: popoverShape)
+            RecorderLiquidGlassSurface(shape: popoverShape, role: .popover)
         } else {
             Color.black
         }
