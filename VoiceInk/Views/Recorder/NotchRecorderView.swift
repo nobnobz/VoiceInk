@@ -131,22 +131,7 @@ struct NotchRecorderView<S: RecorderStateProvider & ObservableObject>: View {
     private var pillBackground: some View {
         if useLiquidGlassDesign {
             ZStack {
-                VisualEffectView(material: .hudWindow, blendingMode: .behindWindow)
-
-                pillShape
-                    .fill(RecorderGlassStyle.nativeGlassDepth(colorScheme: colorScheme, role: .recorder))
-                pillShape
-                    .fill(RecorderGlassStyle.nativeGlassCaustic(colorScheme: colorScheme, role: .recorder))
-
-                GlassEffectContainer {
-                    Color.clear
-                        .glassEffect(.clear, in: pillShape)
-                }
-
-                pillShape
-                    .stroke(RecorderGlassStyle.innerHighlight(colorScheme: colorScheme), lineWidth: 0.9)
-                pillShape
-                    .stroke(RecorderGlassStyle.edgeHighlight(colorScheme: colorScheme), lineWidth: 0.75)
+                RecorderLiquidGlassSurface(shape: pillShape)
             }
         } else {
             Color.black

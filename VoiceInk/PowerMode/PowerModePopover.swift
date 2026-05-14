@@ -71,6 +71,14 @@ struct PowerModePopover: View {
         .padding(.vertical, 8)
         .background { popoverBackground }
         .clipShape(popoverShape)
+        .shadow(
+            color: usesLiquidGlassDesign
+                ? RecorderGlassStyle.outerShadow(colorScheme: colorScheme)
+                : .clear,
+            radius: 22,
+            x: 0,
+            y: 12
+        )
         .environment(\.colorScheme, usesLiquidGlassDesign ? colorScheme : .dark)
         .onAppear {
             selectedConfig = powerModeManager.activeConfiguration

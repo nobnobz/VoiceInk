@@ -124,6 +124,10 @@ class MiniWindowManager: ObservableObject {
         rootView.wantsLayer = true
         rootView.layer?.backgroundColor = NSColor.clear.cgColor
         rootView.layer?.masksToBounds = false
+        rootView.layer?.shadowColor = NSColor.black.cgColor
+        rootView.layer?.shadowOpacity = 0.26
+        rootView.layer?.shadowRadius = 16
+        rootView.layer?.shadowOffset = CGSize(width: 0, height: -7)
 
         let compositorAwakener = NSVisualEffectView()
         compositorAwakener.material = .underWindowBackground
@@ -265,12 +269,12 @@ private final class PillGlassDepthView: NSView {
 
         depthLayer.startPoint = CGPoint(x: 0, y: 0)
         depthLayer.endPoint = CGPoint(x: 1, y: 1)
-        depthLayer.locations = [0, 0.38, 0.72, 1]
+        depthLayer.locations = [0, 0.34, 0.72, 1]
         depthLayer.colors = [
-            NSColor.white.withAlphaComponent(0.10).cgColor,
-            NSColor.black.withAlphaComponent(0.04).cgColor,
-            NSColor.black.withAlphaComponent(0.16).cgColor,
-            NSColor.black.withAlphaComponent(0.30).cgColor
+            NSColor.white.withAlphaComponent(0.16).cgColor,
+            NSColor.white.withAlphaComponent(0.02).cgColor,
+            NSColor.black.withAlphaComponent(0.09).cgColor,
+            NSColor.black.withAlphaComponent(0.21).cgColor
         ]
 
         causticLayer.type = .radial
@@ -278,8 +282,8 @@ private final class PillGlassDepthView: NSView {
         causticLayer.endPoint = CGPoint(x: 0.92, y: 0.92)
         causticLayer.locations = [0, 0.42, 1]
         causticLayer.colors = [
-            NSColor.white.withAlphaComponent(0.11).cgColor,
-            NSColor.white.withAlphaComponent(0.025).cgColor,
+            NSColor.white.withAlphaComponent(0.20).cgColor,
+            NSColor.white.withAlphaComponent(0.045).cgColor,
             NSColor.white.withAlphaComponent(0).cgColor
         ]
 
@@ -372,9 +376,9 @@ private final class PillEdgeHighlightView: NSView {
         topLeftHighlight.endPoint = CGPoint(x: 1, y: 1)
         topLeftHighlight.locations = [0, 0.28, 0.58, 1]
         topLeftHighlight.colors = [
-            NSColor.white.withAlphaComponent(0.36).cgColor,
-            NSColor.white.withAlphaComponent(0.16).cgColor,
-            NSColor.white.withAlphaComponent(0.04).cgColor,
+            NSColor.white.withAlphaComponent(0.82).cgColor,
+            NSColor.white.withAlphaComponent(0.34).cgColor,
+            NSColor.white.withAlphaComponent(0.06).cgColor,
             NSColor.white.withAlphaComponent(0).cgColor
         ]
     }
@@ -386,7 +390,7 @@ private final class PillEdgeHighlightView: NSView {
         bottomRightHighlight.colors = [
             NSColor.black.withAlphaComponent(0.22).cgColor,
             NSColor.black.withAlphaComponent(0.10).cgColor,
-            NSColor.black.withAlphaComponent(0.03).cgColor,
+            NSColor.white.withAlphaComponent(0.025).cgColor,
             NSColor.black.withAlphaComponent(0).cgColor
         ]
     }
