@@ -111,6 +111,7 @@ struct MiniRecorderView<S: RecorderStateProvider & ObservableObject>: View {
         }
         .frame(width: pillWidth, height: pillHeight)
         .environment(\.recorderUsesLiquidGlass, usesLiquidGlassDesign)
+        .environment(\.recorderUsesExternalGlass, usesExternalGlass)
     }
 
     @ViewBuilder
@@ -118,9 +119,7 @@ struct MiniRecorderView<S: RecorderStateProvider & ObservableObject>: View {
         if usesLiquidGlassDesign {
             pillContent
                 .background {
-                    if usesExternalGlass {
-                        RecorderGlassLegibilityLayer(shape: pillShape)
-                    } else {
+                    if !usesExternalGlass {
                         RecorderLiquidGlassSurface(shape: pillShape)
                     }
                 }

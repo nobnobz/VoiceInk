@@ -15,10 +15,19 @@ private struct RecorderUsesLiquidGlassKey: EnvironmentKey {
     static let defaultValue = false
 }
 
+private struct RecorderUsesExternalGlassKey: EnvironmentKey {
+    static let defaultValue = false
+}
+
 extension EnvironmentValues {
     var recorderUsesLiquidGlass: Bool {
         get { self[RecorderUsesLiquidGlassKey.self] }
         set { self[RecorderUsesLiquidGlassKey.self] = newValue }
+    }
+
+    var recorderUsesExternalGlass: Bool {
+        get { self[RecorderUsesExternalGlassKey.self] }
+        set { self[RecorderUsesExternalGlassKey.self] = newValue }
     }
 }
 
@@ -95,10 +104,10 @@ enum RecorderGlassStyle {
             )
         }
 
-        let topSheen = role == .recorder ? 0.115 : 0.155
-        let centerSheen = role == .recorder ? 0.024 : 0.052
-        let lowerShade = role == .recorder ? 0.030 : 0.070
-        let rimShade = role == .recorder ? 0.050 : 0.110
+        let topSheen = role == .recorder ? 0.040 : 0.155
+        let centerSheen = role == .recorder ? 0.000 : 0.052
+        let lowerShade = role == .recorder ? 0.120 : 0.070
+        let rimShade = role == .recorder ? 0.260 : 0.110
 
         return LinearGradient(
             colors: [
@@ -117,8 +126,8 @@ enum RecorderGlassStyle {
         reduceTransparency: Bool,
         role: SurfaceRole
     ) -> LinearGradient {
-        let topShade = role == .recorder ? 0.018 : 0.045
-        let bottomShade = role == .recorder ? 0.060 : 0.125
+        let topShade = role == .recorder ? 0.040 : 0.045
+        let bottomShade = role == .recorder ? 0.240 : 0.125
 
         return LinearGradient(
             colors: [
@@ -157,7 +166,7 @@ enum RecorderGlassStyle {
     }
 
     static func outerShadow(colorScheme _: ColorScheme) -> Color {
-        .black.opacity(0.34)
+        .black.opacity(0.42)
     }
 
     static func controlFill(isEnabled: Bool, isPressed: Bool, isHovering: Bool, colorScheme _: ColorScheme) -> LinearGradient {
@@ -235,7 +244,7 @@ struct RecorderLiquidGlassSurface<S: Shape>: View {
             } else {
                 GlassEffectContainer {
                     Color.clear
-                        .glassEffect(.regular, in: shape)
+                        .glassEffect(role == .recorder ? .clear : .regular, in: shape)
                 }
             }
 
@@ -249,6 +258,7 @@ struct RecorderLiquidGlassSurface<S: Shape>: View {
 struct RecorderGlassDivider: View {
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.recorderUsesLiquidGlass) private var usesLiquidGlassDesign
+    @Environment(\.recorderUsesExternalGlass) private var usesExternalGlass
 
     var body: some View {
         Rectangle()
@@ -271,6 +281,7 @@ struct RecorderToggleButton: View {
     let action: () -> Void
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.recorderUsesLiquidGlass) private var usesLiquidGlassDesign
+    @Environment(\.recorderUsesExternalGlass) private var usesExternalGlass
     @GestureState private var isPressed = false
     @State private var isHovering = false
 
@@ -320,11 +331,11 @@ struct RecorderToggleButton: View {
 
     @ViewBuilder
     private var buttonBackground: some View {
-        if usesLiquidGlassDesign {
+        if usesLiquidGlassDesign && !usesExternalGlass {
             ZStack {
                 GlassEffectContainer {
                     Color.clear
-                        .glassEffect(.regular.interactive(), in: Circle())
+                        .glassEffect(.clear.interactive(), in: Circle())
                 }
 
                 Circle()

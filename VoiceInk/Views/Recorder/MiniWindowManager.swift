@@ -122,11 +122,22 @@ class MiniWindowManager: ObservableObject {
         rootView.layer?.backgroundColor = NSColor.clear.cgColor
         rootView.layer?.masksToBounds = false
 
+        let compositorAwakener = NSVisualEffectView()
+        compositorAwakener.material = .underWindowBackground
+        compositorAwakener.blendingMode = .behindWindow
+        compositorAwakener.state = .active
+        compositorAwakener.isEmphasized = false
+        compositorAwakener.alphaValue = 0.01
+        compositorAwakener.translatesAutoresizingMaskIntoConstraints = false
+        compositorAwakener.wantsLayer = true
+        compositorAwakener.layer?.cornerRadius = cornerRadius
+        compositorAwakener.layer?.masksToBounds = true
+
         let glassView = NSGlassEffectView()
-        glassView.style = .regular
+        glassView.style = .clear
         glassView.cornerRadius = cornerRadius
         glassView.tintColor = nil
-        glassView.appearance = nil
+        glassView.appearance = NSAppearance(named: .darkAqua)
         glassView.translatesAutoresizingMaskIntoConstraints = false
 
         let edgeHighlightView = PillEdgeHighlightView(cornerRadius: cornerRadius)
@@ -136,11 +147,17 @@ class MiniWindowManager: ObservableObject {
         contentView.wantsLayer = true
         contentView.layer?.backgroundColor = NSColor.clear.cgColor
 
+        rootView.addSubview(compositorAwakener)
         rootView.addSubview(glassView)
         rootView.addSubview(edgeHighlightView)
         glassView.contentView = contentView
 
         NSLayoutConstraint.activate([
+            compositorAwakener.leadingAnchor.constraint(equalTo: rootView.leadingAnchor),
+            compositorAwakener.trailingAnchor.constraint(equalTo: rootView.trailingAnchor),
+            compositorAwakener.topAnchor.constraint(equalTo: rootView.topAnchor),
+            compositorAwakener.bottomAnchor.constraint(equalTo: rootView.bottomAnchor),
+
             glassView.leadingAnchor.constraint(equalTo: rootView.leadingAnchor),
             glassView.trailingAnchor.constraint(equalTo: rootView.trailingAnchor),
             glassView.topAnchor.constraint(equalTo: rootView.topAnchor),
