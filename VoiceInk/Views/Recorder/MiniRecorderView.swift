@@ -119,7 +119,17 @@ struct MiniRecorderView<S: RecorderStateProvider & ObservableObject>: View {
         if usesLiquidGlassDesign {
             pillContent
                 .background {
-                    if !usesExternalGlass {
+                    if usesExternalGlass {
+                        VisualEffectView(
+                            material: .hudWindow,
+                            blendingMode: .behindWindow,
+                            cornerRadius: pillCornerRadius,
+                            appearanceName: .darkAqua
+                        )
+                        .opacity(RecorderGlassStyle.externalGlassMaterialOpacity(colorScheme: colorScheme))
+
+                        RecorderGlassLegibilityLayer(shape: pillShape, role: .externalRecorder)
+                    } else {
                         RecorderLiquidGlassSurface(shape: pillShape)
                     }
                 }

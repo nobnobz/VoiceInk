@@ -34,6 +34,7 @@ extension EnvironmentValues {
 enum RecorderGlassStyle {
     enum SurfaceRole {
         case recorder
+        case externalRecorder
         case popover
     }
 
@@ -94,20 +95,44 @@ enum RecorderGlassStyle {
         role: SurfaceRole
     ) -> LinearGradient {
         if reduceTransparency {
+            let opacity = switch role {
+            case .recorder: 0.56
+            case .externalRecorder: 0.72
+            case .popover: 0.66
+            }
+
             return LinearGradient(
                 colors: [
-                    Color.black.opacity(role == .recorder ? 0.56 : 0.66),
-                    Color.black.opacity(role == .recorder ? 0.50 : 0.58)
+                    Color.black.opacity(opacity),
+                    Color.black.opacity(max(0.48, opacity - 0.08))
                 ],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
         }
 
-        let topSheen = role == .recorder ? 0.040 : 0.155
-        let centerSheen = role == .recorder ? 0.000 : 0.052
-        let lowerShade = role == .recorder ? 0.120 : 0.070
-        let rimShade = role == .recorder ? 0.260 : 0.110
+        let topSheen: Double
+        let centerSheen: Double
+        let lowerShade: Double
+        let rimShade: Double
+
+        switch role {
+        case .recorder:
+            topSheen = 0.040
+            centerSheen = 0.000
+            lowerShade = 0.120
+            rimShade = 0.260
+        case .externalRecorder:
+            topSheen = 0.030
+            centerSheen = 0.000
+            lowerShade = 0.260
+            rimShade = 0.460
+        case .popover:
+            topSheen = 0.155
+            centerSheen = 0.052
+            lowerShade = 0.070
+            rimShade = 0.110
+        }
 
         return LinearGradient(
             colors: [
@@ -126,8 +151,20 @@ enum RecorderGlassStyle {
         reduceTransparency: Bool,
         role: SurfaceRole
     ) -> LinearGradient {
-        let topShade = role == .recorder ? 0.040 : 0.045
-        let bottomShade = role == .recorder ? 0.240 : 0.125
+        let topShade: Double
+        let bottomShade: Double
+
+        switch role {
+        case .recorder:
+            topShade = 0.040
+            bottomShade = 0.240
+        case .externalRecorder:
+            topShade = 0.100
+            bottomShade = 0.340
+        case .popover:
+            topShade = 0.045
+            bottomShade = 0.125
+        }
 
         return LinearGradient(
             colors: [
@@ -167,6 +204,10 @@ enum RecorderGlassStyle {
 
     static func outerShadow(colorScheme _: ColorScheme) -> Color {
         .black.opacity(0.42)
+    }
+
+    static func externalGlassMaterialOpacity(colorScheme: ColorScheme) -> Double {
+        colorScheme == .dark ? 0.72 : 0.64
     }
 
     static func controlFill(isEnabled: Bool, isPressed: Bool, isHovering: Bool, colorScheme _: ColorScheme) -> LinearGradient {
@@ -244,7 +285,7 @@ struct RecorderLiquidGlassSurface<S: Shape>: View {
             } else {
                 GlassEffectContainer {
                     Color.clear
-                        .glassEffect(role == .recorder ? .clear : .regular, in: shape)
+                        .glassEffect(role == .popover ? .regular : .clear, in: shape)
                 }
             }
 

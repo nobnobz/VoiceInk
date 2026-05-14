@@ -130,7 +130,7 @@ struct NotchRecorderView<S: RecorderStateProvider & ObservableObject>: View {
     @ViewBuilder
     private var pillBackground: some View {
         if useLiquidGlassDesign {
-            RecorderLiquidGlassSurface(shape: pillShape)
+            RecorderLiquidGlassSurface(shape: pillShape, role: .externalRecorder)
         } else {
             Color.black
         }
