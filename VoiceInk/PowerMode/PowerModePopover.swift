@@ -2,29 +2,53 @@ import SwiftUI
 
 struct PowerModePopover: View {
     @ObservedObject var powerModeManager = PowerModeManager.shared
+    @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.recorderUsesLiquidGlass) private var usesLiquidGlassDesign
     @State private var selectedConfig: PowerModeConfig?
-    
+
+    private let popoverShape = RoundedRectangle(cornerRadius: 12, style: .continuous)
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Select Power Mode")
                 .font(.headline)
-                .foregroundColor(.white.opacity(0.9))
+                .foregroundColor(
+                    RecorderGlassStyle.primaryContent(
+                        usesLiquidGlass: usesLiquidGlassDesign,
+                        colorScheme: colorScheme
+                    )
+                )
                 .padding(.horizontal)
                 .padding(.top, 8)
-            
+
             Divider()
-                .background(Color.white.opacity(0.1))
-            
+                .background(
+                    RecorderGlassStyle.divider(
+                        usesLiquidGlass: usesLiquidGlassDesign,
+                        colorScheme: colorScheme
+                    )
+                )
+
             ScrollView {
                 let enabledConfigs = powerModeManager.configurations.filter { $0.isEnabled }
                 VStack(alignment: .leading, spacing: 4) {
                     if enabledConfigs.isEmpty {
                         VStack(alignment: .center, spacing: 8) {
                             Image(systemName: "sparkles")
-                                .foregroundColor(.white.opacity(0.6))
+                                .foregroundColor(
+                                    RecorderGlassStyle.secondaryContent(
+                                        usesLiquidGlass: usesLiquidGlassDesign,
+                                        colorScheme: colorScheme
+                                    )
+                                )
                                 .font(.system(size: 16))
                             Text("No Power Modes Available")
-                                .foregroundColor(.white.opacity(0.8))
+                                .foregroundColor(
+                                    RecorderGlassStyle.primaryContent(
+                                        usesLiquidGlass: usesLiquidGlassDesign,
+                                        colorScheme: colorScheme
+                                    )
+                                )
                                 .font(.system(size: 13))
                                 .lineLimit(1)
                                 .truncationMode(.tail)
@@ -51,8 +75,9 @@ struct PowerModePopover: View {
         .frame(width: 180)
         .frame(maxHeight: 340)
         .padding(.vertical, 8)
-        .background(Color.black)
-        .environment(\.colorScheme, .dark)
+        .background { popoverBackground }
+        .clipShape(popoverShape)
+        .environment(\.colorScheme, usesLiquidGlassDesign ? colorScheme : .dark)
         .onAppear {
             selectedConfig = powerModeManager.activeConfiguration
         }
@@ -60,12 +85,28 @@ struct PowerModePopover: View {
             selectedConfig = newValue
         }
     }
-    
+
     private func applySelectedConfiguration() {
         Task {
             if let config = selectedConfig {
                 await PowerModeSessionManager.shared.beginSession(with: config)
             }
+        }
+    }
+
+    @ViewBuilder
+    private var popoverBackground: some View {
+        if usesLiquidGlassDesign {
+            ZStack {
+                VisualEffectView(
+                    material: .popover,
+                    blendingMode: .behindWindow,
+                    cornerRadius: 12
+                )
+                RecorderGlassLegibilityLayer(shape: popoverShape)
+            }
+        } else {
+            Color.black
         }
     }
 }
@@ -74,7 +115,11 @@ struct PowerModeRow: View {
     let config: PowerModeConfig
     let isSelected: Bool
     let action: () -> Void
-    
+
+    @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.recorderUsesLiquidGlass) private var usesLiquidGlassDesign
+    @State private var isHovering = false
+
     var body: some View {
         Button(action: action) {
             HStack(spacing: 8) {
@@ -82,14 +127,24 @@ struct PowerModeRow: View {
                     .font(.system(size: 14))
 
                 Text(config.name)
-                    .foregroundColor(.white.opacity(0.9))
+                    .foregroundColor(
+                        RecorderGlassStyle.primaryContent(
+                            usesLiquidGlass: usesLiquidGlassDesign,
+                            colorScheme: colorScheme
+                        )
+                    )
                     .font(.system(size: 13))
                     .lineLimit(1)
 
                 if isSelected {
                     Spacer()
                     Image(systemName: "checkmark")
-                        .foregroundColor(.green)
+                        .foregroundColor(
+                            RecorderGlassStyle.successContent(
+                                usesLiquidGlass: usesLiquidGlassDesign,
+                                colorScheme: colorScheme
+                            )
+                        )
                         .font(.system(size: 10))
                 }
             }
@@ -99,7 +154,27 @@ struct PowerModeRow: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .background(isSelected ? Color.white.opacity(0.1) : Color.clear)
-        .cornerRadius(4)
+        .background { rowBackground }
+        .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+        .onHover { isHovering = $0 }
     }
-} 
+
+    @ViewBuilder
+    private var rowBackground: some View {
+        if usesLiquidGlassDesign {
+            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                .fill(isSelected || isHovering ? RecorderGlassStyle.selectionFill(colorScheme: colorScheme) : Color.clear)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 6, style: .continuous)
+                        .stroke(
+                            isSelected
+                                ? RecorderGlassStyle.controlStroke(isEnabled: true, colorScheme: colorScheme)
+                                : Color.clear,
+                            lineWidth: 0.6
+                        )
+                )
+        } else {
+            Color.white.opacity(isSelected ? 0.1 : 0)
+        }
+    }
+}

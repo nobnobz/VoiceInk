@@ -80,8 +80,11 @@ class MiniWindowManager: ObservableObject {
         let newPanel = MiniRecorderPanel(contentRect: metrics)
         let view = makeView(self)
         let hostingController = NSHostingController(rootView: view)
+        let usesLiquidGlassDesign = UserDefaults.standard.bool(forKey: "UseLiquidGlassDesign")
 
-        if #available(macOS 26.0, *), UserDefaults.standard.bool(forKey: "UseLiquidGlassDesign") {
+        newPanel.hasShadow = usesLiquidGlassDesign
+
+        if #available(macOS 26.0, *), usesLiquidGlassDesign {
             newPanel.hasShadow = true
             newPanel.contentView = makeGlassHost(
                 contentView: hostingController.view,
@@ -126,10 +129,10 @@ class MiniWindowManager: ObservableObject {
         let rootView = NSView()
         rootView.wantsLayer = true
         rootView.layer?.backgroundColor = NSColor.clear.cgColor
-        rootView.layer?.shadowColor = NSColor.black.withAlphaComponent(0.28).cgColor
+        rootView.layer?.shadowColor = NSColor.black.withAlphaComponent(0.24).cgColor
         rootView.layer?.shadowOpacity = 1
-        rootView.layer?.shadowRadius = 16
-        rootView.layer?.shadowOffset = NSSize(width: 0, height: -5)
+        rootView.layer?.shadowRadius = 18
+        rootView.layer?.shadowOffset = NSSize(width: 0, height: -6)
 
         let compositorAwakener = NSVisualEffectView()
         compositorAwakener.material = .underWindowBackground
@@ -145,7 +148,7 @@ class MiniWindowManager: ObservableObject {
         let glassView = NSGlassEffectView()
         glassView.style = .clear
         glassView.cornerRadius = cornerRadius
-        glassView.tintColor = NSColor.controlBackgroundColor.withAlphaComponent(0.06)
+        glassView.tintColor = NSColor.windowBackgroundColor.withAlphaComponent(0.025)
         glassView.appearance = nil
         glassView.translatesAutoresizingMaskIntoConstraints = false
 

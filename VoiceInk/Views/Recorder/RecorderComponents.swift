@@ -22,37 +22,67 @@ extension EnvironmentValues {
 }
 
 enum RecorderGlassStyle {
+    enum ContentRole {
+        case primary
+        case secondary
+        case muted
+        case disabled
+    }
+
+    static func content(_ role: ContentRole, usesLiquidGlass: Bool, colorScheme: ColorScheme) -> Color {
+        guard usesLiquidGlass else {
+            switch role {
+            case .primary: return .white
+            case .secondary: return .white.opacity(0.6)
+            case .muted: return .white.opacity(0.44)
+            case .disabled: return .white.opacity(0.3)
+            }
+        }
+
+        switch (role, colorScheme) {
+        case (.primary, .dark): return .white.opacity(0.96)
+        case (.secondary, .dark): return .white.opacity(0.74)
+        case (.muted, .dark): return .white.opacity(0.52)
+        case (.disabled, .dark): return .white.opacity(0.34)
+        case (.primary, _): return .black.opacity(0.82)
+        case (.secondary, _): return .black.opacity(0.62)
+        case (.muted, _): return .black.opacity(0.44)
+        case (.disabled, _): return .black.opacity(0.30)
+        }
+    }
+
     static func primaryContent(usesLiquidGlass: Bool, colorScheme: ColorScheme) -> Color {
-        guard usesLiquidGlass else { return .white }
-        return colorScheme == .dark ? .white.opacity(0.94) : .black.opacity(0.78)
+        content(.primary, usesLiquidGlass: usesLiquidGlass, colorScheme: colorScheme)
     }
 
     static func secondaryContent(usesLiquidGlass: Bool, colorScheme: ColorScheme) -> Color {
-        guard usesLiquidGlass else { return .white.opacity(0.6) }
-        return colorScheme == .dark ? .white.opacity(0.68) : .black.opacity(0.56)
+        content(.secondary, usesLiquidGlass: usesLiquidGlass, colorScheme: colorScheme)
+    }
+
+    static func mutedContent(usesLiquidGlass: Bool, colorScheme: ColorScheme) -> Color {
+        content(.muted, usesLiquidGlass: usesLiquidGlass, colorScheme: colorScheme)
     }
 
     static func disabledContent(usesLiquidGlass: Bool, colorScheme: ColorScheme) -> Color {
-        guard usesLiquidGlass else { return .white.opacity(0.3) }
-        return colorScheme == .dark ? .white.opacity(0.34) : .black.opacity(0.30)
+        content(.disabled, usesLiquidGlass: usesLiquidGlass, colorScheme: colorScheme)
     }
 
     static func divider(usesLiquidGlass: Bool, colorScheme: ColorScheme) -> Color {
         guard usesLiquidGlass else { return .white.opacity(0.15) }
-        return colorScheme == .dark ? .white.opacity(0.14) : .black.opacity(0.10)
+        return colorScheme == .dark ? .white.opacity(0.16) : .black.opacity(0.12)
     }
 
     static func contentShadow(usesLiquidGlass: Bool, colorScheme: ColorScheme) -> Color {
         guard usesLiquidGlass else { return .clear }
-        return colorScheme == .dark ? .black.opacity(0.35) : .white.opacity(0.60)
+        return colorScheme == .dark ? .black.opacity(0.46) : .white.opacity(0.74)
     }
 
-    static func glassFill(colorScheme: ColorScheme, reduceTransparency: Bool) -> LinearGradient {
+    static func glassBackground(colorScheme: ColorScheme, reduceTransparency: Bool) -> LinearGradient {
         if reduceTransparency {
             return LinearGradient(
                 colors: colorScheme == .dark
-                    ? [Color.black.opacity(0.78), Color.black.opacity(0.70)]
-                    : [Color.white.opacity(0.92), Color.white.opacity(0.84)],
+                    ? [Color.black.opacity(0.82), Color.black.opacity(0.74)]
+                    : [Color.white.opacity(0.94), Color.white.opacity(0.86)],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
@@ -61,54 +91,114 @@ enum RecorderGlassStyle {
         return LinearGradient(
             colors: colorScheme == .dark
                 ? [
-                    Color.white.opacity(0.10),
-                    Color.black.opacity(0.24),
-                    Color.black.opacity(0.40)
+                    Color.white.opacity(0.18),
+                    Color.black.opacity(0.16),
+                    Color.black.opacity(0.36)
                 ]
                 : [
-                    Color.white.opacity(0.54),
-                    Color.white.opacity(0.34),
-                    Color.black.opacity(0.08)
-                ],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
-    }
-
-    static func glassSheen(colorScheme: ColorScheme) -> LinearGradient {
-        LinearGradient(
-            colors: colorScheme == .dark
-                ? [
-                    Color.white.opacity(0.13),
-                    Color.white.opacity(0.03),
-                    Color.clear
-                ]
-                : [
-                    Color.white.opacity(0.38),
-                    Color.white.opacity(0.10),
-                    Color.clear
-                ],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
-    }
-
-    static func glassStroke(colorScheme: ColorScheme) -> LinearGradient {
-        LinearGradient(
-            colors: colorScheme == .dark
-                ? [
+                    Color.white.opacity(0.60),
                     Color.white.opacity(0.28),
-                    Color.white.opacity(0.08),
-                    Color.black.opacity(0.26)
+                    Color.black.opacity(0.06)
+                ],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+    }
+
+    static func adaptiveScrim(colorScheme: ColorScheme, reduceTransparency: Bool) -> LinearGradient {
+        LinearGradient(
+            colors: colorScheme == .dark
+                ? [
+                    Color.black.opacity(reduceTransparency ? 0.18 : 0.10),
+                    Color.black.opacity(reduceTransparency ? 0.26 : 0.18),
+                    Color.white.opacity(0.04)
                 ]
                 : [
-                    Color.white.opacity(0.72),
-                    Color.white.opacity(0.20),
+                    Color.white.opacity(reduceTransparency ? 0.24 : 0.14),
+                    Color.clear,
+                    Color.black.opacity(reduceTransparency ? 0.08 : 0.05)
+                ],
+            startPoint: .top,
+            endPoint: .bottomTrailing
+        )
+    }
+
+    static func edgeHighlight(colorScheme: ColorScheme) -> LinearGradient {
+        LinearGradient(
+            colors: colorScheme == .dark
+                ? [
+                    Color.white.opacity(0.34),
+                    Color.white.opacity(0.11),
+                    Color.black.opacity(0.32)
+                ]
+                : [
+                    Color.white.opacity(0.86),
+                    Color.white.opacity(0.24),
                     Color.black.opacity(0.18)
                 ],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
         )
+    }
+
+    static func innerHighlight(colorScheme: ColorScheme) -> LinearGradient {
+        LinearGradient(
+            colors: colorScheme == .dark
+                ? [
+                    Color.white.opacity(0.18),
+                    Color.white.opacity(0.04),
+                    Color.clear
+                ]
+                : [
+                    Color.white.opacity(0.46),
+                    Color.white.opacity(0.10),
+                    Color.clear
+                ],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+    }
+
+    static func outerShadow(colorScheme: ColorScheme) -> Color {
+        colorScheme == .dark ? .black.opacity(0.38) : .black.opacity(0.16)
+    }
+
+    static func controlFill(isEnabled: Bool, isPressed: Bool, isHovering: Bool, colorScheme: ColorScheme) -> LinearGradient {
+        let activeBoost = isEnabled ? 1.0 : 0.55
+        let pressBoost = isPressed ? 1.22 : (isHovering ? 1.10 : 1.0)
+        return LinearGradient(
+            colors: colorScheme == .dark
+                ? [
+                    Color.white.opacity(0.16 * activeBoost * pressBoost),
+                    Color.white.opacity(0.07 * activeBoost),
+                    Color.black.opacity(0.18)
+                ]
+                : [
+                    Color.white.opacity(0.54 * activeBoost * pressBoost),
+                    Color.white.opacity(0.18 * activeBoost),
+                    Color.black.opacity(0.045)
+                ],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+    }
+
+    static func controlStroke(isEnabled: Bool, colorScheme: ColorScheme) -> Color {
+        let opacity = isEnabled ? 1.0 : 0.55
+        return colorScheme == .dark
+            ? Color.white.opacity(0.20 * opacity)
+            : Color.black.opacity(0.12 * opacity)
+    }
+
+    static func selectionFill(colorScheme: ColorScheme) -> Color {
+        colorScheme == .dark ? Color.white.opacity(0.13) : Color.black.opacity(0.07)
+    }
+
+    static func successContent(usesLiquidGlass: Bool, colorScheme: ColorScheme) -> Color {
+        guard usesLiquidGlass else { return .green }
+        return colorScheme == .dark
+            ? Color(red: 0.57, green: 0.95, blue: 0.70)
+            : Color(red: 0.05, green: 0.45, blue: 0.24)
     }
 }
 
@@ -120,14 +210,21 @@ struct RecorderGlassLegibilityLayer<S: Shape>: View {
     var body: some View {
         ZStack {
             shape.fill(
-                RecorderGlassStyle.glassFill(
+                RecorderGlassStyle.glassBackground(
                     colorScheme: colorScheme,
                     reduceTransparency: reduceTransparency
                 )
             )
-            shape.fill(RecorderGlassStyle.glassSheen(colorScheme: colorScheme))
-            shape.stroke(RecorderGlassStyle.glassStroke(colorScheme: colorScheme), lineWidth: 0.7)
+            shape.fill(
+                RecorderGlassStyle.adaptiveScrim(
+                    colorScheme: colorScheme,
+                    reduceTransparency: reduceTransparency
+                )
+            )
+            shape.stroke(RecorderGlassStyle.innerHighlight(colorScheme: colorScheme), lineWidth: 1.2)
+            shape.stroke(RecorderGlassStyle.edgeHighlight(colorScheme: colorScheme), lineWidth: 0.75)
         }
+        .shadow(color: RecorderGlassStyle.outerShadow(colorScheme: colorScheme), radius: 18, x: 0, y: 8)
     }
 }
 
@@ -140,6 +237,8 @@ struct RecorderToggleButton: View {
     let action: () -> Void
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.recorderUsesLiquidGlass) private var usesLiquidGlassDesign
+    @GestureState private var isPressed = false
+    @State private var isHovering = false
 
     init(isEnabled: Bool, icon: String, disabled: Bool = false, action: @escaping () -> Void) {
         self.isEnabled = isEnabled
@@ -162,6 +261,8 @@ struct RecorderToggleButton: View {
                 }
             }
             .foregroundColor(iconColor)
+            .frame(width: 22, height: 24)
+            .background { buttonBackground }
             .shadow(
                 color: RecorderGlassStyle.contentShadow(
                     usesLiquidGlass: usesLiquidGlassDesign,
@@ -174,6 +275,39 @@ struct RecorderToggleButton: View {
         }
         .buttonStyle(PlainButtonStyle())
         .disabled(disabled)
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 0)
+                .updating($isPressed) { _, state, _ in
+                    state = true
+                }
+        )
+        .onHover { isHovering = $0 }
+    }
+
+    @ViewBuilder
+    private var buttonBackground: some View {
+        if usesLiquidGlassDesign {
+            Circle()
+                .fill(
+                    RecorderGlassStyle.controlFill(
+                        isEnabled: isEnabled,
+                        isPressed: isPressed,
+                        isHovering: isHovering,
+                        colorScheme: colorScheme
+                    )
+                )
+                .overlay(
+                    Circle()
+                        .stroke(
+                            RecorderGlassStyle.controlStroke(
+                                isEnabled: isEnabled,
+                                colorScheme: colorScheme
+                            ),
+                            lineWidth: 0.65
+                        )
+                )
+                .opacity(disabled ? 0.48 : 1)
+        }
     }
 
     private var iconColor: Color {
@@ -297,6 +431,8 @@ struct ProgressAnimation: View {
 
 struct RecorderPromptButton: View {
     @EnvironmentObject private var enhancementService: AIEnhancementService
+    @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.recorderUsesLiquidGlass) private var usesLiquidGlassDesign
     @Binding var activePopover: ActivePopoverState
     let buttonSize: CGFloat
     let padding: EdgeInsets
@@ -332,6 +468,8 @@ struct RecorderPromptButton: View {
         .popover(isPresented: .constant(activePopover == .enhancement), arrowEdge: .bottom) {
             EnhancementPromptPopover()
                 .environmentObject(enhancementService)
+                .environment(\.colorScheme, colorScheme)
+                .environment(\.recorderUsesLiquidGlass, usesLiquidGlassDesign)
                 .onHover {
                     isHoveringPopover = $0
                     syncPopoverVisibility()
@@ -361,6 +499,8 @@ struct RecorderPromptButton: View {
 
 struct RecorderPowerModeButton: View {
     @ObservedObject private var powerModeManager = PowerModeManager.shared
+    @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.recorderUsesLiquidGlass) private var usesLiquidGlassDesign
     @Binding var activePopover: ActivePopoverState
     let buttonSize: CGFloat
     let padding: EdgeInsets
@@ -391,6 +531,8 @@ struct RecorderPowerModeButton: View {
         }
         .popover(isPresented: .constant(activePopover == .power), arrowEdge: .bottom) {
             PowerModePopover()
+                .environment(\.colorScheme, colorScheme)
+                .environment(\.recorderUsesLiquidGlass, usesLiquidGlassDesign)
                 .onHover {
                     isHoveringPopover = $0
                     syncPopoverVisibility()

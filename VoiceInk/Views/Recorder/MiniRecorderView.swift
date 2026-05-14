@@ -131,7 +131,7 @@ struct MiniRecorderView<S: RecorderStateProvider & ObservableObject>: View {
                 .background {
                     ZStack {
                         VisualEffectView(
-                            material: .hudWindow,
+                            material: .underWindowBackground,
                             blendingMode: .behindWindow,
                             cornerRadius: pillCornerRadius
                         )

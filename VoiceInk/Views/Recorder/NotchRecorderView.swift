@@ -123,7 +123,7 @@ struct NotchRecorderView<S: RecorderStateProvider & ObservableObject>: View {
     private var pillBackground: some View {
         if useLiquidGlassDesign {
             ZStack {
-                VisualEffectView(material: .hudWindow, blendingMode: .behindWindow)
+                VisualEffectView(material: .underWindowBackground, blendingMode: .behindWindow)
 
                 if #available(macOS 26.0, *) {
                     GlassEffectContainer {
