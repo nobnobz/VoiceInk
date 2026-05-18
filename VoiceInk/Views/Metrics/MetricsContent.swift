@@ -14,6 +14,7 @@ struct MetricsContent: View {
     @State private var isModelStatsPanelPresented = false
     @State private var isResetConfirmationPresented = false
     @State private var isResettingDashboard = false
+    @State private var isAccessibilityEnabled = AXIsProcessTrusted()
 
     var body: some View {
         Group {
@@ -26,6 +27,10 @@ struct MetricsContent: View {
                 GeometryReader { geometry in
                     ScrollView {
                         VStack(spacing: 24) {
+                            if !isAccessibilityEnabled {
+                                accessibilityPermissionCallout
+                            }
+
                             heroSection
                             metricsSection
                             HelpAndResourcesSection()
@@ -47,6 +52,10 @@ struct MetricsContent: View {
         }
         .task {
             await loadMetricsEfficiently()
+        }
+        .onAppear(perform: refreshAccessibilityStatus)
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+            refreshAccessibilityStatus()
         }
         .onReceive(NotificationCenter.default.publisher(for: .sessionMetricsDidChange)) { _ in
             metricsTask?.cancel()
@@ -90,6 +99,29 @@ struct MetricsContent: View {
             }
         } message: {
             Text("This clears the saved dashboard metrics and starts the dashboard from zero. Your transcription history stays untouched.")
+        }
+    }
+
+    private var accessibilityPermissionCallout: some View {
+        PermissionCard(
+            icon: "hand.raised",
+            title: "Accessibility Access",
+            description: "VoiceInk needs Accessibility permission to work reliably across your entire Mac",
+            isGranted: isAccessibilityEnabled,
+            buttonTitle: "Open System Settings",
+            buttonAction: openAccessibilitySettings,
+            checkPermission: refreshAccessibilityStatus,
+            infoTipMessage: "VoiceInk uses Accessibility to work reliably across apps."
+        )
+    }
+
+    private func refreshAccessibilityStatus() {
+        isAccessibilityEnabled = AXIsProcessTrusted()
+    }
+
+    private func openAccessibilitySettings() {
+        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
+            NSWorkspace.shared.open(url)
         }
     }
     
@@ -152,17 +184,30 @@ struct MetricsContent: View {
     }
 
     private var emptyStateView: some View {
-        VStack(spacing: 20) {
-            Image(systemName: "waveform")
-                .font(.system(size: 56, weight: .semibold))
-                .foregroundColor(.secondary)
-            Text("No Recorder Sessions Yet")
-                .font(.title3.weight(.semibold))
-            Text("Start your first recording to unlock value insights.")
-                .foregroundColor(.secondary)
+        GeometryReader { geometry in
+            ScrollView {
+                VStack(spacing: 24) {
+                    if !isAccessibilityEnabled {
+                        accessibilityPermissionCallout
+                    }
+
+                    VStack(spacing: 20) {
+                        Image(systemName: "waveform")
+                            .font(.system(size: 56, weight: .semibold))
+                            .foregroundColor(.secondary)
+                        Text("No Recorder Sessions Yet")
+                            .font(.title3.weight(.semibold))
+                        Text("Start your first recording to unlock value insights.")
+                            .foregroundColor(.secondary)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .frame(minHeight: geometry.size.height - 56)
+                }
+                .padding(.vertical, 28)
+                .padding(.horizontal, 32)
+            }
+            .background(Color(.windowBackgroundColor))
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(.windowBackgroundColor))
     }
     
     // MARK: - Sections
