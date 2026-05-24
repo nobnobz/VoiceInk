@@ -1,5 +1,6 @@
 import SwiftUI
 import Cocoa
+import Carbon.HIToolbox
 import LaunchAtLogin
 import AVFoundation
 
@@ -18,12 +19,12 @@ struct SettingsView: View {
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = true
     @AppStorage("restoreClipboardAfterPaste") private var restoreClipboardAfterPaste = true
     @AppStorage("clipboardRestoreDelay") private var clipboardRestoreDelay = 2.0
-    @AppStorage("useAppleScriptPaste") private var useAppleScriptPaste = false
+    @AppStorage(PasteMethod.userDefaultsKey) private var pasteMethodRawValue = PasteMethod.standard.rawValue
     @State private var showResetOnboardingAlert = false
-    @State private var isCustomCancelEnabled = ShortcutStore.shortcut(for: .cancelRecorder) != nil
+    @State private var hasCancelRecordingShortcut = ShortcutStore.shortcut(for: .cancelRecorder) != nil
+    @State private var cancelRecordingShortcutRecorderResetID = 0
 
     // Expansion states - all collapsed by default
-    @State private var isCustomCancelExpanded = false
     @State private var isMiddleClickExpanded = false
     @State private var isSoundFeedbackExpanded = false
     @State private var isMuteSystemExpanded = false
@@ -98,25 +99,31 @@ struct SettingsView: View {
                         .controlSize(.small)
                 }
 
-                // Custom Cancel - hierarchical
-                ExpandableSettingsRow(
-                    isExpanded: $isCustomCancelExpanded,
-                    isEnabled: $isCustomCancelEnabled,
-                    label: "Custom Cancel Shortcut"
-                ) {
-                    LabeledContent("Shortcut") {
-                        ShortcutRecorder(action: .cancelRecorder) {
-                            isCustomCancelEnabled = true
-                            isCustomCancelExpanded = true
+                LabeledContent("Cancel Recording") {
+                    HStack(spacing: 8) {
+                        ShortcutRecorder(
+                            action: .cancelRecorder,
+                            defaultShortcut: Self.defaultCancelRecordingShortcut
+                        ) {
+                            hasCancelRecordingShortcut = true
                         }
+                            .id(cancelRecordingShortcutRecorderResetID)
                             .controlSize(.small)
+
+                        Button {
+                            ShortcutStore.setShortcut(nil, for: .cancelRecorder)
+                            hasCancelRecordingShortcut = false
+                            cancelRecordingShortcutRecorderResetID += 1
+                        } label: {
+                            Image(systemName: "arrow.counterclockwise")
+                        }
+                        .buttonStyle(.plain)
+                        .help("Reset to default")
                     }
                 }
-                .onChange(of: isCustomCancelEnabled) { _, newValue in
-                    if !newValue {
-                        ShortcutStore.setShortcut(nil, for: .cancelRecorder)
-                        isCustomCancelExpanded = false
-                    }
+                .onReceive(NotificationCenter.default.publisher(for: ShortcutStore.shortcutDidChange)) { notification in
+                    guard let action = notification.object as? ShortcutAction, action == .cancelRecorder else { return }
+                    hasCancelRecordingShortcut = ShortcutStore.shortcut(for: .cancelRecorder) != nil
                 }
 
                 // Middle-Click
@@ -168,11 +175,12 @@ struct SettingsView: View {
                     }
                 }
 
-                // Restore Clipboard
+                // Keep Clipboard Content
                 ExpandableSettingsRow(
                     isExpanded: $isRestoreClipboardExpanded,
                     isEnabled: $restoreClipboardAfterPaste,
-                    label: "Restore Clipboard After Paste"
+                    label: "Keep Clipboard Content",
+                    infoMessage: "VoiceInk temporarily uses the clipboard to paste transcription. When enabled, it restores your previous clipboard content after the selected delay. When disabled, the pasted transcription stays on your clipboard."
                 ) {
                     Picker("Restore Delay", selection: $clipboardRestoreDelay) {
                         Text("250ms").tag(0.25)
@@ -185,12 +193,24 @@ struct SettingsView: View {
                     }
                 }
 
-                // AppleScript Paste
-                Toggle(isOn: $useAppleScriptPaste) {
-                    HStack(spacing: 4) {
-                        Text("Use AppleScript Paste")
-                        InfoTip("Enable this if pasting doesn't work with your keyboard layout (e.g. Neo2). Uses AppleScript instead of simulated key events.")
+                // Paste Method
+                Picker(selection: $pasteMethodRawValue) {
+                    ForEach(PasteMethod.allCases) { method in
+                        Text(method.displayName).tag(method.rawValue)
                     }
+                } label: {
+                    HStack(spacing: 4) {
+                        Text("Paste Method")
+                        InfoTip("Default uses simulated Cmd+V key events. AppleScript can help when custom keyboard layouts do not paste correctly.")
+                    }
+                }
+                .pickerStyle(.menu)
+                .onChange(of: pasteMethodRawValue) { _, newValue in
+                    guard let method = PasteMethod(rawValue: newValue) else {
+                        pasteMethodRawValue = PasteMethod.standard.rawValue
+                        return
+                    }
+                    PasteMethod.setCurrent(method)
                 }
             }
 
@@ -298,6 +318,11 @@ struct SettingsView: View {
             Text("You'll see the introduction screens again the next time you launch the app.")
         }
     }
+
+    private static let defaultCancelRecordingShortcut = Shortcut.key(
+        keyCode: UInt16(kVK_Escape),
+        modifierFlags: []
+    )
 
     @ViewBuilder
     private func shortcutModePicker(binding: Binding<RecordingShortcutManager.Mode>) -> some View {

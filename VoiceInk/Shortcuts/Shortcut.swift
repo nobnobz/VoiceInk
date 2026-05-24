@@ -93,7 +93,7 @@ struct Shortcut: Codable, Equatable {
             return normalizedFlags == modifierFlags
         }
 
-        return keyCode == eventKeyCode && normalizedFlags.isSuperset(of: modifierFlags)
+        return keyCode == eventKeyCode && normalizedFlags == modifierFlags
     }
 
     func shouldReleaseModifierEvent(keyCode eventKeyCode: UInt16, modifierFlags eventModifierFlags: NSEvent.ModifierFlags) -> Bool {
@@ -108,6 +108,15 @@ struct Shortcut: Codable, Equatable {
         }
 
         return keyCode == eventKeyCode
+    }
+
+    func isInterruptedByAdditionalKeyDown(keyCode eventKeyCode: UInt16) -> Bool {
+        switch kind {
+        case .modifierOnly:
+            return true
+        case .key:
+            return keyCode != eventKeyCode
+        }
     }
 
     static func isModifierKeyCode(_ keyCode: UInt16) -> Bool {
